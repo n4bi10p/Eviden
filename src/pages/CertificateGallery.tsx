@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useUser } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
+import ResponsiveLayout from '../components/ResponsiveLayout';
 import GlassCard from '../components/GlassCard';
 import { apiService } from '../services/ApiService';
 import { walletService } from '../services/WalletService';
@@ -161,35 +161,33 @@ const CertificateGallery: React.FC = () => {
     : certificates.filter(cert => cert.certificate_type === filter);
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar userType={user?.role || 'attendee'} />
-      
-      <div className="flex-1 ml-64 p-8">
+    <ResponsiveLayout>
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className={`text-3xl font-bold mb-2 ${
+        <header className="mb-4 sm:mb-6">
+          <h1 className={`text-responsive-2xl sm:text-responsive-3xl font-bold mb-2 ${
             theme === 'dark' ? 'text-white' : 'text-slate-800'
           }`}>
             Certificate Gallery 🏆
           </h1>
-          <p className={`${
+          <p className={`text-responsive-sm sm:text-responsive-base ${
             theme === 'dark' ? 'text-cyber-cyan/80' : 'text-slate-700'
           }`}>
             View and manage your event certificates and NFTs
           </p>
-        </div>
+        </header>
 
         {/* Wallet Connection */}
         {!walletConnected && (
-          <GlassCard className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className={`text-lg font-semibold mb-2 ${
+          <GlassCard className="mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+              <div className="flex-1">
+                <h3 className={`text-responsive-lg font-semibold mb-1 ${
                   theme === 'dark' ? 'text-white' : 'text-slate-800'
                 }`}>
                   Connect Wallet for NFT Features
                 </h3>
-                <p className={`text-sm ${
+                <p className={`text-responsive-sm ${
                   theme === 'dark' ? 'text-cyber-cyan/70' : 'text-gray-600'
                 }`}>
                   Connect your Aptos wallet to mint certificates as NFTs
@@ -197,7 +195,7 @@ const CertificateGallery: React.FC = () => {
               </div>
               <button
                 onClick={connectWallet}
-                className={`px-6 py-2 rounded-lg transition-colors ${
+                className={`px-4 sm:px-6 py-2 rounded-lg transition-colors touch-friendly ${
                   theme === 'dark' 
                     ? 'bg-cyber-cyan text-black hover:bg-cyber-cyan/80' 
                     : 'bg-blue-600 text-white hover:bg-blue-700'
@@ -210,13 +208,13 @@ const CertificateGallery: React.FC = () => {
         )}
 
         {/* Filters */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <div className="flex flex-wrap gap-2">
             {(['all', 'attendance', 'participation', 'completion', 'achievement'] as const).map(filterType => (
               <button
                 key={filterType}
                 onClick={() => setFilter(filterType)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-responsive-sm font-medium transition-colors touch-friendly ${
                   filter === filterType
                     ? (theme === 'dark' 
                         ? 'bg-cyber-cyan text-black' 
@@ -233,12 +231,12 @@ const CertificateGallery: React.FC = () => {
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <GlassCard className="text-center">
-            <div className="text-2xl font-bold text-cyber-cyan mb-1">
+            <div className="text-responsive-xl sm:text-responsive-2xl font-bold text-cyber-cyan mb-1">
               {certificates.length}
             </div>
-            <div className={`text-sm ${
+            <div className={`text-responsive-xs sm:text-responsive-sm ${
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
             }`}>
               Total Certificates
@@ -246,10 +244,10 @@ const CertificateGallery: React.FC = () => {
           </GlassCard>
           
           <GlassCard className="text-center">
-            <div className="text-2xl font-bold text-green-400 mb-1">
+            <div className="text-responsive-xl sm:text-responsive-2xl font-bold text-green-400 mb-1">
               {certificates.filter(c => c.nft_token_id).length}
             </div>
-            <div className={`text-sm ${
+            <div className={`text-responsive-xs sm:text-responsive-sm ${
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
             }`}>
               Minted NFTs
@@ -257,10 +255,10 @@ const CertificateGallery: React.FC = () => {
           </GlassCard>
           
           <GlassCard className="text-center">
-            <div className="text-2xl font-bold text-purple-400 mb-1">
+            <div className="text-responsive-xl sm:text-responsive-2xl font-bold text-purple-400 mb-1">
               {certificates.filter(c => c.certificate_type === 'achievement').length}
             </div>
-            <div className={`text-sm ${
+            <div className={`text-responsive-xs sm:text-responsive-sm ${
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
             }`}>
               Achievements
@@ -268,10 +266,10 @@ const CertificateGallery: React.FC = () => {
           </GlassCard>
           
           <GlassCard className="text-center">
-            <div className="text-2xl font-bold text-yellow-400 mb-1">
+            <div className="text-responsive-xl sm:text-responsive-2xl font-bold text-yellow-400 mb-1">
               {new Set(certificates.map(c => c.event_id)).size}
             </div>
-            <div className={`text-sm ${
+            <div className={`text-responsive-xs sm:text-responsive-sm ${
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
             }`}>
               Events Attended
@@ -281,30 +279,30 @@ const CertificateGallery: React.FC = () => {
 
         {/* Certificate Grid */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="text-4xl mb-4">📜</div>
-            <p className={`${
+          <div className="text-center py-8 sm:py-12">
+            <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">📜</div>
+            <p className={`text-responsive-sm sm:text-responsive-base ${
               theme === 'dark' ? 'text-cyber-cyan/70' : 'text-gray-600'
             }`}>
               Loading certificates...
             </p>
           </div>
         ) : filteredCertificates.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🏆</div>
-            <h3 className={`text-xl font-semibold mb-2 ${
+          <div className="text-center py-8 sm:py-12">
+            <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">🏆</div>
+            <h3 className={`text-responsive-lg sm:text-responsive-xl font-semibold mb-2 ${
               theme === 'dark' ? 'text-white' : 'text-slate-800'
             }`}>
               No Certificates Yet
             </h3>
-            <p className={`mb-4 ${
+            <p className={`mb-3 sm:mb-4 text-responsive-sm sm:text-responsive-base ${
               theme === 'dark' ? 'text-cyber-cyan/70' : 'text-gray-600'
             }`}>
               Attend events to earn certificates and NFTs
             </p>
             <button
               onClick={() => navigate('/events/discover')}
-              className={`px-6 py-2 rounded-lg transition-colors ${
+              className={`px-4 sm:px-6 py-2 rounded-lg transition-colors touch-friendly ${
                 theme === 'dark' 
                   ? 'bg-cyber-cyan text-black hover:bg-cyber-cyan/80' 
                   : 'bg-blue-600 text-white hover:bg-blue-700'
@@ -314,25 +312,25 @@ const CertificateGallery: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
             {filteredCertificates.map(certificate => (
-              <GlassCard key={certificate.id} className="hover:scale-105 transition-transform cursor-pointer">
+              <GlassCard key={certificate.id} className="hover:scale-[1.02] transition-transform cursor-pointer">
                 <div onClick={() => setSelectedCertificate(certificate)}>
                   {/* Certificate Image */}
-                  <div className="relative mb-4">
+                  <div className="relative mb-3 sm:mb-4">
                     {certificate.certificate_image_url ? (
                       <img
                         src={certificate.certificate_image_url}
                         alt={`${certificate.event_name} Certificate`}
-                        className="w-full h-48 object-cover rounded-lg"
+                        className="w-full h-36 sm:h-48 object-cover rounded-lg"
                       />
                     ) : (
-                      <div className={`w-full h-48 rounded-lg flex items-center justify-center ${
+                      <div className={`w-full h-36 sm:h-48 rounded-lg flex items-center justify-center ${
                         theme === 'dark' ? 'bg-cyber-purple/20' : 'bg-gray-100'
                       }`}>
                         <div className="text-center">
-                          <div className="text-4xl mb-2">{getCertificateTypeIcon(certificate.certificate_type)}</div>
-                          <p className={`text-sm ${
+                          <div className="text-2xl sm:text-4xl mb-1 sm:mb-2">{getCertificateTypeIcon(certificate.certificate_type)}</div>
+                          <p className={`text-responsive-xs sm:text-responsive-sm ${
                             theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                           }`}>
                             Certificate
@@ -343,13 +341,13 @@ const CertificateGallery: React.FC = () => {
 
                     {/* NFT Badge */}
                     {certificate.nft_token_id && (
-                      <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                      <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-responsive-xs font-medium">
                         NFT
                       </div>
                     )}
 
                     {/* Type Badge */}
-                    <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-medium ${
+                    <div className={`absolute top-2 left-2 px-2 py-1 rounded-full text-responsive-xs font-medium ${
                       theme === 'dark' 
                         ? 'bg-black/50 text-white' 
                         : 'bg-white/90 text-gray-800'
@@ -359,14 +357,14 @@ const CertificateGallery: React.FC = () => {
                   </div>
 
                   {/* Certificate Info */}
-                  <div>
-                    <h3 className={`font-semibold mb-2 line-clamp-2 ${
+                  <div className="mb-3">
+                    <h3 className={`font-semibold mb-2 line-clamp-2 text-responsive-sm sm:text-responsive-base ${
                       theme === 'dark' ? 'text-white' : 'text-slate-800'
                     }`}>
                       {certificate.event_name}
                     </h3>
                     
-                    <div className={`text-sm space-y-1 ${
+                    <div className={`text-responsive-xs sm:text-responsive-sm space-y-1 ${
                       theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                     }`}>
                       <p><strong>Venue:</strong> {certificate.venue_name}</p>
@@ -377,13 +375,13 @@ const CertificateGallery: React.FC = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       downloadCertificate(certificate);
                     }}
-                    className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
+                    className={`flex-1 px-2 sm:px-3 py-1.5 text-responsive-xs rounded transition-colors touch-friendly ${
                       theme === 'dark' 
                         ? 'bg-cyber-purple/30 text-cyber-cyan hover:bg-cyber-purple/50' 
                         : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
@@ -397,7 +395,7 @@ const CertificateGallery: React.FC = () => {
                       e.stopPropagation();
                       shareCertificate(certificate);
                     }}
-                    className={`flex-1 px-3 py-1 text-xs rounded transition-colors ${
+                    className={`flex-1 px-2 sm:px-3 py-1.5 text-responsive-xs rounded transition-colors touch-friendly ${
                       theme === 'dark' 
                         ? 'bg-cyber-purple/30 text-cyber-cyan hover:bg-cyber-purple/50' 
                         : 'bg-green-100 text-green-700 hover:bg-green-200'
@@ -413,7 +411,7 @@ const CertificateGallery: React.FC = () => {
                         mintCertificateNFT(certificate);
                       }}
                       disabled={mintingCertificate === certificate.id}
-                      className={`w-full px-3 py-1 text-xs rounded transition-colors disabled:opacity-50 ${
+                      className={`w-full px-2 sm:px-3 py-1.5 text-responsive-xs rounded transition-colors disabled:opacity-50 touch-friendly ${
                         theme === 'dark' 
                           ? 'bg-cyber-cyan text-black hover:bg-cyber-cyan/80' 
                           : 'bg-purple-600 text-white hover:bg-purple-700'
@@ -430,17 +428,17 @@ const CertificateGallery: React.FC = () => {
 
         {/* Certificate Details Modal */}
         {selectedCertificate && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-3 sm:p-4 z-50">
             <GlassCard className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-start mb-6">
-                <h2 className={`text-2xl font-bold ${
+              <div className="flex justify-between items-start mb-4 sm:mb-6">
+                <h2 className={`text-responsive-xl sm:text-responsive-2xl font-bold ${
                   theme === 'dark' ? 'text-white' : 'text-slate-800'
                 }`}>
                   Certificate Details
                 </h2>
                 <button
                   onClick={() => setSelectedCertificate(null)}
-                  className={`text-2xl ${
+                  className={`text-responsive-xl sm:text-responsive-2xl touch-friendly ${
                     theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-800'
                   }`}
                 >
@@ -453,31 +451,31 @@ const CertificateGallery: React.FC = () => {
                 <img
                   src={selectedCertificate.certificate_image_url}
                   alt={`${selectedCertificate.event_name} Certificate`}
-                  className="w-full rounded-lg mb-6"
+                  className="w-full rounded-lg mb-4 sm:mb-6"
                 />
               )}
 
               {/* Certificate Information */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <h3 className={`text-lg font-semibold mb-2 ${getCertificateTypeColor(selectedCertificate.certificate_type)}`}>
+                  <h3 className={`text-responsive-lg ${getCertificateTypeColor(selectedCertificate.certificate_type)} mb-1`}>
                     {getCertificateTypeIcon(selectedCertificate.certificate_type)} {selectedCertificate.event_name}
                   </h3>
-                  <p className={`text-sm ${
+                  <p className={`text-responsive-sm ${
                     theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                   }`}>
                     {selectedCertificate.certificate_type.charAt(0).toUpperCase() + selectedCertificate.certificate_type.slice(1)} Certificate
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <p className={`text-sm font-medium ${
+                    <p className={`text-responsive-sm font-medium mb-1 ${
                       theme === 'dark' ? 'text-cyber-cyan/70' : 'text-gray-700'
                     }`}>
                       Event Details
                     </p>
-                    <div className={`text-sm ${
+                    <div className={`text-responsive-xs sm:text-responsive-sm ${
                       theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                     }`}>
                       <p><strong>Venue:</strong> {selectedCertificate.venue_name}</p>
@@ -487,12 +485,12 @@ const CertificateGallery: React.FC = () => {
                   </div>
 
                   <div>
-                    <p className={`text-sm font-medium ${
+                    <p className={`text-responsive-sm font-medium mb-1 ${
                       theme === 'dark' ? 'text-cyber-cyan/70' : 'text-gray-700'
                     }`}>
                       Certificate Details
                     </p>
-                    <div className={`text-sm ${
+                    <div className={`text-responsive-xs sm:text-responsive-sm ${
                       theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                     }`}>
                       <p><strong>Issued:</strong> {new Date(selectedCertificate.issued_at).toLocaleDateString()}</p>
@@ -507,12 +505,12 @@ const CertificateGallery: React.FC = () => {
                 {/* Attributes */}
                 {selectedCertificate.attributes && Object.keys(selectedCertificate.attributes).length > 0 && (
                   <div>
-                    <p className={`text-sm font-medium mb-2 ${
+                    <p className={`text-responsive-sm font-medium mb-2 ${
                       theme === 'dark' ? 'text-cyber-cyan/70' : 'text-gray-700'
                     }`}>
                       Additional Information
                     </p>
-                    <div className={`text-sm space-y-1 ${
+                    <div className={`text-responsive-xs sm:text-responsive-sm space-y-1 ${
                       theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                     }`}>
                       {selectedCertificate.attributes.attendance_duration && (
@@ -529,7 +527,7 @@ const CertificateGallery: React.FC = () => {
                           <strong>Skills:</strong>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {selectedCertificate.attributes.skills_acquired.map(skill => (
-                              <span key={skill} className={`px-2 py-1 rounded text-xs ${
+                              <span key={skill} className={`px-2 py-1 rounded text-responsive-xs ${
                                 theme === 'dark' 
                                   ? 'bg-cyber-purple/30 text-cyber-cyan' 
                                   : 'bg-blue-100 text-blue-700'
@@ -547,12 +545,12 @@ const CertificateGallery: React.FC = () => {
                 {/* Blockchain Info */}
                 {selectedCertificate.blockchain_hash && (
                   <div>
-                    <p className={`text-sm font-medium mb-2 ${
+                    <p className={`text-responsive-sm font-medium mb-2 ${
                       theme === 'dark' ? 'text-cyber-cyan/70' : 'text-gray-700'
                     }`}>
                       Blockchain Verification
                     </p>
-                    <div className={`text-xs font-mono p-2 rounded ${
+                    <div className={`text-responsive-xs font-mono p-2 rounded break-all ${
                       theme === 'dark' ? 'bg-black/30' : 'bg-gray-100'
                     }`}>
                       {selectedCertificate.blockchain_hash}
@@ -562,10 +560,10 @@ const CertificateGallery: React.FC = () => {
               </div>
 
               {/* Modal Actions */}
-              <div className="flex space-x-3 mt-6">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
                 <button
                   onClick={() => downloadCertificate(selectedCertificate)}
-                  className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
+                  className={`flex-1 py-2 px-4 rounded-lg transition-colors touch-friendly ${
                     theme === 'dark' 
                       ? 'bg-cyber-purple/30 text-cyber-cyan hover:bg-cyber-purple/50' 
                       : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
@@ -576,7 +574,7 @@ const CertificateGallery: React.FC = () => {
                 
                 <button
                   onClick={() => shareCertificate(selectedCertificate)}
-                  className={`flex-1 py-2 px-4 rounded-lg transition-colors ${
+                  className={`flex-1 py-2 px-4 rounded-lg transition-colors touch-friendly ${
                     theme === 'dark' 
                       ? 'bg-cyber-purple/30 text-cyber-cyan hover:bg-cyber-purple/50' 
                       : 'bg-green-100 text-green-700 hover:bg-green-200'
@@ -589,7 +587,7 @@ const CertificateGallery: React.FC = () => {
                   <button
                     onClick={() => mintCertificateNFT(selectedCertificate)}
                     disabled={mintingCertificate === selectedCertificate.id}
-                    className={`flex-1 py-2 px-4 rounded-lg transition-colors disabled:opacity-50 ${
+                    className={`flex-1 py-2 px-4 rounded-lg transition-colors disabled:opacity-50 touch-friendly ${
                       theme === 'dark' 
                         ? 'bg-cyber-cyan text-black hover:bg-cyber-cyan/80' 
                         : 'bg-purple-600 text-white hover:bg-purple-700'
@@ -603,7 +601,7 @@ const CertificateGallery: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </ResponsiveLayout>
   );
 };
 

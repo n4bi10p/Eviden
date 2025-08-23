@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useUser } from '../contexts/UserContext';
 import ResponsiveLayout from '../components/ResponsiveLayout';
 import GlassCard from '../components/GlassCard';
+import CyberButton from '../components/MacOSButton';
 
 const Dashboard: React.FC = () => {
   const { user } = useUser();
@@ -26,84 +27,84 @@ const Dashboard: React.FC = () => {
 
   return (
     <ResponsiveLayout>
-      <div className="space-y-4 sm:space-y-6 lg:space-y-8">
-        {/* Responsive Header */}
-        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6 lg:mb-8">
-          <div className="flex-1">
-            <h1 className={`text-responsive-2xl sm:text-responsive-3xl font-bold mb-2 ${
+      <div className="space-y-6 md:space-y-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 md:mb-8">
+          <div>
+            <h1 className={`text-2xl md:text-3xl font-bold mb-2 ${
               theme === 'dark' ? 'text-white' : 'text-slate-800'
             }`}>
               Welcome back, {user.name}! 👋
             </h1>
-            <p className={`text-responsive-sm sm:text-responsive-base ${
+            <p className={`text-sm md:text-base ${
               theme === 'dark' ? 'text-cyber-cyan/80' : 'text-slate-700'
             }`}>
               Manage your events and certificates
             </p>
           </div>
-        </header>
+        </div>
 
-        {/* Responsive Quick Stats Grid */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6" aria-label="Quick statistics">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           <GlassCard className="text-center">
-            <div className={`text-responsive-2xl sm:text-responsive-3xl font-bold mb-2 ${
+            <div className={`text-2xl md:text-3xl font-bold mb-2 ${
               theme === 'dark' ? 'text-cyber-cyan' : 'text-blue-600'
             }`}>5</div>
-            <div className={`text-responsive-sm sm:text-responsive-base ${
+            <div className={`text-sm md:text-base ${
               theme === 'dark' ? 'text-white/70' : 'text-slate-700'
             }`}>Events Attended</div>
           </GlassCard>
           <GlassCard className="text-center">
-            <div className={`text-responsive-2xl sm:text-responsive-3xl font-bold mb-2 ${
+            <div className={`text-2xl md:text-3xl font-bold mb-2 ${
               theme === 'dark' ? 'text-cyber-cyan' : 'text-green-600'
             }`}>490</div>
-            <div className={`text-responsive-sm sm:text-responsive-base ${
+            <div className={`text-sm md:text-base ${
               theme === 'dark' ? 'text-white/70' : 'text-slate-700'
             }`}>Total Attendees</div>
           </GlassCard>
           <GlassCard className="text-center">
-            <div className={`text-responsive-2xl sm:text-responsive-3xl font-bold mb-2 ${
+            <div className={`text-2xl md:text-3xl font-bold mb-2 ${
               theme === 'dark' ? 'text-cyber-cyan' : 'text-purple-600'
             }`}>2</div>
-            <div className={`text-responsive-sm sm:text-responsive-base ${
+            <div className={`text-sm md:text-base ${
               theme === 'dark' ? 'text-white/70' : 'text-slate-700'
             }`}>Certificates</div>
           </GlassCard>
           <GlassCard className="text-center">
-            <div className={`text-responsive-2xl sm:text-responsive-3xl font-bold mb-2 ${
+            <div className={`text-2xl md:text-3xl font-bold mb-2 ${
               theme === 'dark' ? 'text-cyber-cyan' : 'text-orange-600'
             }`}>3</div>
-            <div className={`text-responsive-sm sm:text-responsive-base ${
+            <div className={`text-sm md:text-base ${
               theme === 'dark' ? 'text-white/70' : 'text-slate-700'
             }`}>Events Created</div>
           </GlassCard>
-        </section>
+        </div>
 
-        {/* Responsive Content Grid */}
-        <section className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 lg:gap-8" aria-label="Dashboard content">
+        {/* Recent Events */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           {/* Events List */}
           <GlassCard>
-            <h2 className={`text-responsive-xl sm:text-responsive-2xl font-bold mb-3 sm:mb-4 lg:mb-6 ${
+            <h2 className={`text-xl md:text-2xl font-bold mb-4 md:mb-6 ${
               theme === 'dark' ? 'text-white' : 'text-slate-800'
             }`}>
               Recent Events 📅
             </h2>
-            <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {allEvents.map((event) => (
-                <div key={event.id} className={`p-2 sm:p-3 lg:p-4 rounded-lg border touch-friendly ${
+                <div key={event.id} className={`p-3 md:p-4 rounded-lg border ${
                   theme === 'dark' ? 'border-cyber-purple/30' : 'border-slate-200'
                 }`}>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                    <div className="flex-1 min-w-0">
-                      <h3 className={`font-semibold text-responsive-sm sm:text-responsive-base truncate ${
+                    <div className="flex-1">
+                      <h3 className={`font-semibold text-sm md:text-base ${
                         theme === 'dark' ? 'text-white' : 'text-slate-800'
                       }`}>{event.name}</h3>
-                      <p className={`text-responsive-xs sm:text-responsive-sm ${
+                      <p className={`text-xs md:text-sm ${
                         theme === 'dark' ? 'text-cyber-cyan/70' : 'text-slate-600'
                       }`}>{event.date}</p>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <span className={`inline-block px-2 py-1 rounded text-responsive-xs font-medium ${
+                    <div className="text-right">
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
                         event.status === 'active' 
                           ? (theme === 'dark' ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700')
                           : event.status === 'upcoming'
@@ -112,7 +113,7 @@ const Dashboard: React.FC = () => {
                       }`}>
                         {event.status}
                       </span>
-                      <p className={`text-responsive-xs mt-1 ${
+                      <p className={`text-xs mt-1 ${
                         theme === 'dark' ? 'text-white/60' : 'text-slate-600'
                       }`}>
                         {event.attendees}/{event.maxAttendees}
@@ -126,35 +127,35 @@ const Dashboard: React.FC = () => {
 
           {/* Certificates */}
           <GlassCard>
-            <h2 className={`text-responsive-xl sm:text-responsive-2xl font-bold mb-3 sm:mb-4 lg:mb-6 ${
+            <h2 className={`text-xl md:text-2xl font-bold mb-4 md:mb-6 ${
               theme === 'dark' ? 'text-white' : 'text-slate-800'
             }`}>
               Recent Certificates 🏆
             </h2>
-            <div className="space-y-2 sm:space-y-3 lg:space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {certificates.map((cert) => (
-                <div key={cert.id} className={`p-2 sm:p-3 lg:p-4 rounded-lg border touch-friendly ${
+                <div key={cert.id} className={`p-3 md:p-4 rounded-lg border ${
                   theme === 'dark' ? 'border-cyber-purple/30' : 'border-slate-200'
                 }`}>
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className={`font-semibold text-responsive-sm sm:text-responsive-base flex-1 min-w-0 ${
+                  <div className="flex items-start justify-between">
+                    <h3 className={`font-semibold text-sm md:text-base flex-1 ${
                       theme === 'dark' ? 'text-white' : 'text-slate-800'
                     }`}>{cert.event}</h3>
-                    {cert.verified && <span className={`text-responsive-sm flex-shrink-0 ${
+                    {cert.verified && <span className={`text-sm ${
                       theme === 'dark' ? 'text-green-400' : 'text-green-600'
                     }`}>✓</span>}
                   </div>
-                  <p className={`text-responsive-xs sm:text-responsive-sm mb-1 ${
+                  <p className={`text-xs md:text-sm mb-1 ${
                     theme === 'dark' ? 'text-cyber-cyan/70' : 'text-slate-600'
                   }`}>{cert.issuer}</p>
-                  <p className={`text-responsive-xs ${
+                  <p className={`text-xs ${
                     theme === 'dark' ? 'text-white/50' : 'text-slate-500'
                   }`}>{cert.date}</p>
                 </div>
               ))}
             </div>
           </GlassCard>
-        </section>
+        </div>
       </div>
     </ResponsiveLayout>
   );

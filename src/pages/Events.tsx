@@ -1,11 +1,18 @@
-import React from 'react';
-import Sidebar from '../components/Sidebar';
+import React, { useState } from 'react';
+import ResponsiveLayout from '../components/ResponsiveLayout';
 import GlassCard from '../components/GlassCard';
 import MacOSButton from '../components/MacOSButton';
+import AdvancedSearch from '../components/AdvancedSearch';
 import { useTheme } from '../contexts/ThemeContext';
 
 const Events: React.FC = () => {
   const { theme } = useTheme();
+  const [showSearch, setShowSearch] = useState(false);
+  
+  const handleResultSelect = (result: any) => {
+    console.log('Selected event:', result);
+    // Handle event selection logic here
+  };
   
   const events = [
     {
@@ -53,62 +60,73 @@ const Events: React.FC = () => {
   ];
 
   return (
-    <div className="flex min-h-screen bg-pastel-gradient">
-      <Sidebar userType="attendee" />
-      
-      <div className="flex-1 ml-64 p-8">
+    <ResponsiveLayout>
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className={`text-3xl font-bold mb-2 ${
-              theme === 'dark' ? 'text-white/60' : 'text-macos-gray-800'
+        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="flex-1">
+            <h1 className={`text-responsive-2xl sm:text-responsive-3xl font-bold mb-2 ${
+              theme === 'dark' ? 'text-white' : 'text-slate-800'
             }`}>
               Discover Events 🎯
             </h1>
-            <p className={`${
-              theme === 'dark' ? 'text-white/40' : 'text-macos-gray-600'
+            <p className={`text-responsive-sm sm:text-responsive-base ${
+              theme === 'dark' ? 'text-cyber-cyan/80' : 'text-slate-700'
             }`}>
               Find and attend blockchain events with verified certificates
             </p>
           </div>
           
-          <MacOSButton icon="🔍">
-            Search Events
+          <MacOSButton 
+            icon="🔍"
+            onClick={() => setShowSearch(!showSearch)}
+          >
+            {showSearch ? 'Hide Search' : 'Advanced Search'}
           </MacOSButton>
-        </div>
+        </header>
+
+        {/* Advanced Search Component */}
+        {showSearch && (
+          <div className="mb-4 sm:mb-6">
+            <AdvancedSearch 
+              onResultSelect={handleResultSelect}
+              initialQuery=""
+            />
+          </div>
+        )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
           <GlassCard className="text-center">
-            <div className={`text-2xl font-bold mb-1 ${
-              theme === 'dark' ? 'text-blue-400/60' : 'text-macos-blue'
+            <div className={`text-responsive-xl sm:text-responsive-2xl font-bold mb-1 ${
+              theme === 'dark' ? 'text-cyber-cyan' : 'text-blue-600'
             }`}>12</div>
-            <div className={`text-sm ${
-              theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+            <div className={`text-responsive-xs sm:text-responsive-sm ${
+              theme === 'dark' ? 'text-white/70' : 'text-slate-700'
             }`}>Upcoming Events</div>
           </GlassCard>
           <GlassCard className="text-center">
-            <div className={`text-2xl font-bold mb-1 ${
-              theme === 'dark' ? 'text-green-400/60' : 'text-macos-green'
+            <div className={`text-responsive-xl sm:text-responsive-2xl font-bold mb-1 ${
+              theme === 'dark' ? 'text-cyber-cyan' : 'text-green-600'
             }`}>3.2K</div>
-            <div className={`text-sm ${
-              theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+            <div className={`text-responsive-xs sm:text-responsive-sm ${
+              theme === 'dark' ? 'text-white/70' : 'text-slate-700'
             }`}>Total Attendees</div>
           </GlassCard>
           <GlassCard className="text-center">
-            <div className={`text-2xl font-bold mb-1 ${
-              theme === 'dark' ? 'text-purple-400/60' : 'text-macos-purple'
+            <div className={`text-responsive-xl sm:text-responsive-2xl font-bold mb-1 ${
+              theme === 'dark' ? 'text-cyber-cyan' : 'text-purple-600'
             }`}>45</div>
-            <div className={`text-sm ${
-              theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+            <div className={`text-responsive-xs sm:text-responsive-sm ${
+              theme === 'dark' ? 'text-white/70' : 'text-slate-700'
             }`}>Cities Worldwide</div>
           </GlassCard>
           <GlassCard className="text-center">
-            <div className={`text-2xl font-bold mb-1 ${
-              theme === 'dark' ? 'text-teal-400/60' : 'text-macos-teal'
+            <div className={`text-responsive-xl sm:text-responsive-2xl font-bold mb-1 ${
+              theme === 'dark' ? 'text-cyber-cyan' : 'text-orange-600'
             }`}>98%</div>
-            <div className={`text-sm ${
-              theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+            <div className={`text-responsive-xs sm:text-responsive-sm ${
+              theme === 'dark' ? 'text-white/70' : 'text-slate-700'
             }`}>Verification Rate</div>
           </GlassCard>
         </div>
@@ -273,7 +291,7 @@ const Events: React.FC = () => {
           </GlassCard>
         </div>
       </div>
-    </div>
+    </ResponsiveLayout>
   );
 };
 

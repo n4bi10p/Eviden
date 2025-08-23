@@ -16,12 +16,11 @@ const Sidebar: React.FC<SidebarProps> = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Enhanced responsive breakpoint detection
+  // Check if screen is mobile size
   useEffect(() => {
     const checkScreenSize = () => {
-      const width = window.innerWidth;
-      setIsMobile(width < 1024); // Changed to lg breakpoint (1024px)
-      if (width >= 1024) {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) {
         setIsMobileMenuOpen(false);
       }
     };
@@ -62,26 +61,25 @@ const Sidebar: React.FC<SidebarProps> = () => {
 
   return (
     <>
-      {/* Enhanced Hamburger Menu Button - Touch-friendly and accessible */}
+      {/* Hamburger Menu Button - Only visible on mobile */}
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className={`lg:hidden fixed top-4 left-4 z-50 btn-touch rounded-lg glass border transition-all duration-300 shadow-lg ${
+        className={`md:hidden fixed top-4 left-4 z-50 p-3 rounded-lg glass border transition-all duration-300 ${
           theme === 'dark' 
-            ? 'border-cyber-purple/30 text-white hover:bg-cyber-purple/20 bg-gray-900/90' 
-            : 'border-gray-300/40 text-gray-800 hover:bg-white/70 bg-white/90'
+            ? 'border-cyber-purple/30 text-white hover:bg-cyber-purple/20' 
+            : 'border-gray-300/30 text-gray-800 hover:bg-white/40'
         }`}
-        aria-label="Toggle navigation menu"
-        aria-expanded={isMobileMenuOpen}
+        aria-label="Toggle menu"
       >
-        <div className="w-5 h-5 sm:w-6 sm:h-6 flex flex-col justify-center space-y-1">
-          <span className={`block h-0.5 w-full transition-all duration-300 ${
-            isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''
+        <div className="w-6 h-6 flex flex-col justify-center space-y-1">
+          <span className={`block h-0.5 w-6 transition-all duration-300 ${
+            isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''
           } ${theme === 'dark' ? 'bg-white' : 'bg-gray-800'}`} />
-          <span className={`block h-0.5 w-full transition-all duration-300 ${
+          <span className={`block h-0.5 w-6 transition-all duration-300 ${
             isMobileMenuOpen ? 'opacity-0' : ''
           } ${theme === 'dark' ? 'bg-white' : 'bg-gray-800'}`} />
-          <span className={`block h-0.5 w-full transition-all duration-300 ${
-            isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''
+          <span className={`block h-0.5 w-6 transition-all duration-300 ${
+            isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''
           } ${theme === 'dark' ? 'bg-white' : 'bg-gray-800'}`} />
         </div>
       </button>
@@ -89,37 +87,36 @@ const Sidebar: React.FC<SidebarProps> = () => {
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+          className="md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
           onClick={() => setIsMobileMenuOpen(false)}
-          aria-hidden="true"
         />
       )}
 
-      {/* Responsive Sidebar */}
+      {/* Sidebar */}
       <div className={`
-        fixed lg:relative
-        ${isMobile && !isMobileMenuOpen ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'}
-        w-72 sm:w-80 lg:w-56 xl:w-64 h-screen glass-dark left-0 top-0 z-40 border-r flex flex-col transition-transform duration-300 ease-in-out
-        lg:z-10
+        ${isMobile ? 'fixed' : 'relative'} 
+        ${isMobile && !isMobileMenuOpen ? '-translate-x-full' : 'translate-x-0'}
+        w-64 h-screen glass-dark left-0 top-0 z-40 border-r flex flex-col transition-transform duration-300 ease-in-out
+        md:translate-x-0 md:relative md:z-10
         ${theme === 'dark' ? 'border-cyber-purple/30' : 'border-gray-300/30'}
       `}>
-        <div className="flex-1 spacing-responsive-sm overflow-y-auto">
+        <div className="flex-1 p-4 md:p-6 overflow-y-auto">
           {/* Logo */}
-          <div className="flex items-center space-x-2 mb-4 md:mb-6">
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+          <div className="flex items-center space-x-3 mb-6 md:mb-8">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
               theme === 'dark' 
                 ? 'bg-gradient-to-br from-cyber-purple to-cyber-cyan neon-glow' 
                 : 'bg-macos-blue-gradient shadow-macos'
             }`}>
-              <span className="text-white font-bold text-xs">E</span>
+              <span className="text-white font-bold text-sm">E</span>
             </div>
-            <span className={`text-base md:text-lg font-semibold ${
+            <span className={`text-lg md:text-xl font-semibold ${
               theme === 'dark' ? 'text-white neon-text' : 'text-macos-gray-900'
             }`}>Eviden</span>
           </div>
 
           {/* User Type Badge */}
-          <div className="mb-4 md:mb-6">
+          <div className="mb-6 md:mb-8">
             <span className={`
               px-3 py-1 rounded-full text-xs font-medium border
               ${theme === 'dark' 
@@ -131,8 +128,8 @@ const Sidebar: React.FC<SidebarProps> = () => {
             </span>
           </div>
 
-          {/* Enhanced Navigation - Touch-friendly and accessible */}
-          <nav className="space-y-1 mb-4 lg:mb-6" role="navigation" aria-label="Main navigation">
+          {/* Navigation */}
+          <nav className="space-y-1 md:space-y-2 mb-6 md:mb-8">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href;
               return (
@@ -141,20 +138,19 @@ const Sidebar: React.FC<SidebarProps> = () => {
                   to={item.href}
                   onClick={handleNavClick}
                   className={`
-                    btn-touch flex items-center space-x-3 px-3 sm:px-4 py-3 rounded-lg transition-all duration-200 border text-responsive-sm sm:text-responsive-base
+                    flex items-center space-x-3 px-3 md:px-4 py-2 md:py-3 rounded-lg transition-all duration-200 border text-sm md:text-base
                     ${isActive 
                       ? (theme === 'dark' 
                           ? 'bg-cyber-purple/30 text-cyber-cyan border-cyber-cyan/30 neon-glow' 
                           : 'bg-macos-blue/20 text-macos-blue border-macos-blue/30 shadow-macos')
                       : (theme === 'dark' 
-                          ? 'text-white/70 hover:bg-cyber-purple/20 hover:text-cyber-cyan hover:border-cyber-purple/30 border-transparent focus:outline-none focus:ring-2 focus:ring-cyber-cyan/50' 
-                          : 'text-macos-gray-800 hover:bg-white/40 hover:text-macos-gray-900 hover:border-macos-blue/30 border-transparent focus:outline-none focus:ring-2 focus:ring-macos-blue/50')
+                          ? 'text-white/70 hover:bg-cyber-purple/20 hover:text-cyber-cyan hover:border-cyber-purple/30 border-transparent' 
+                          : 'text-macos-gray-800 hover:bg-white/40 hover:text-macos-gray-900 hover:border-macos-blue/30 border-transparent')
                     }
                   `}
-                  aria-current={isActive ? 'page' : undefined}
                 >
-                  <span className="text-lg sm:text-xl flex-shrink-0">{item.icon}</span>
-                  <span className="font-medium truncate">{item.name}</span>
+                  <span className="text-base md:text-lg">{item.icon}</span>
+                  <span className="font-medium">{item.name}</span>
                 </Link>
               );
             })}
@@ -199,12 +195,12 @@ const Sidebar: React.FC<SidebarProps> = () => {
         </div>
 
         {/* Bottom Section - Fixed at bottom */}
-        <div className="p-3 md:p-4 border-t border-white/10">
-          <div className={`glass rounded-lg p-2 md:p-3 border ${
+        <div className="p-4 md:p-6 border-t border-white/10">
+          <div className={`glass rounded-lg p-3 md:p-4 border ${
             theme === 'dark' ? 'border-cyber-purple/40' : 'border-gray-300/40'
           }`}>
-            <div className="flex items-center space-x-2">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs ${
+            <div className="flex items-center space-x-3">
+              <div className={`w-8 md:w-10 h-8 md:h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${
                 theme === 'dark' 
                   ? 'bg-gradient-to-br from-cyber-purple to-cyber-cyan neon-glow' 
                   : 'bg-macos-blue-gradient shadow-macos'
@@ -212,7 +208,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
               <div className="min-w-0 flex-1">
-                <p className={`text-xs font-medium truncate ${
+                <p className={`text-xs md:text-sm font-medium truncate ${
                   theme === 'dark' ? 'text-white' : 'text-macos-gray-900'
                 }`}>
                   {user?.name || 'User'}

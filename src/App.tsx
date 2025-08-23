@@ -14,6 +14,7 @@ import Profile from './pages/Profile';
 import Events from './pages/Events';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
+import ComponentsDemo from './pages/ComponentsDemo';
 
 // App Router Component
 const AppRouter: React.FC = () => {
@@ -79,6 +80,12 @@ const AppRouter: React.FC = () => {
           <Route path="/settings" element={
             <ProtectedRoute>
               <Settings />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/demo" element={
+            <ProtectedRoute>
+              <ComponentsDemo />
             </ProtectedRoute>
           } />
           

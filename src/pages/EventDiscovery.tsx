@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useUser } from '../contexts/UserContext';
-import Sidebar from '../components/Sidebar';
+import ResponsiveLayout from '../components/ResponsiveLayout';
 import GlassCard from '../components/GlassCard';
 import MacOSButton from '../components/MacOSButton';
 import { apiService } from '../services/ApiService';
@@ -214,26 +214,26 @@ const EventDiscovery: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar userType={user.role} />
-      
-      <div className="flex-1 ml-64 p-8">
+    <ResponsiveLayout>
+      <div className="space-y-4 sm:space-y-6 lg:space-y-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className={`text-3xl font-bold mb-2 ${
-            theme === 'dark' ? 'text-white' : 'text-slate-800'
-          }`}>
-            Discover Events 🔍
-          </h1>
-          <p className={`${
-            theme === 'dark' ? 'text-cyber-cyan/80' : 'text-slate-700'
-          }`}>
-            Find and join amazing events in your area
-          </p>
-        </div>
+        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6 lg:mb-8">
+          <div className="flex-1">
+            <h1 className={`text-responsive-2xl sm:text-responsive-3xl font-bold mb-2 ${
+              theme === 'dark' ? 'text-white' : 'text-slate-800'
+            }`}>
+              Discover Events 🔍
+            </h1>
+            <p className={`text-responsive-sm sm:text-responsive-base ${
+              theme === 'dark' ? 'text-cyber-cyan/80' : 'text-slate-700'
+            }`}>
+              Find and join amazing events in your area
+            </p>
+          </div>
+        </header>
 
         {/* Filters */}
-        <GlassCard className="mb-8">
+        <GlassCard className="mb-4 sm:mb-6 lg:mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {/* Search */}
             <div>
@@ -496,7 +496,7 @@ const EventDiscovery: React.FC = () => {
           </GlassCard>
         )}
       </div>
-    </div>
+    </ResponsiveLayout>
   );
 };
 

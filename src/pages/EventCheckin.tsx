@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
+import ResponsiveLayout from '../components/ResponsiveLayout';
 import GlassCard from '../components/GlassCard';
 import MacOSButton from '../components/MacOSButton';
 import MacOSSwitch from '../components/MacOSSwitch';
+import { useTheme } from '../contexts/ThemeContext';
 
 const EventCheckin: React.FC = () => {
+  const { theme } = useTheme();
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [qrRotation, setQrRotation] = useState(0);
   const [checkInStatus, setCheckInStatus] = useState<'pending' | 'verifying' | 'success' | 'failed'>('pending');
@@ -42,21 +44,25 @@ const EventCheckin: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-pastel-gradient">
-      <Sidebar userType="attendee" />
-      
-      <div className="flex-1 ml-64 p-8">
+    <ResponsiveLayout>
+      <div className="space-y-4 sm:space-y-6 lg:space-y-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-macos-gray-800 mb-2">
-            Event Check-in 📍
-          </h1>
-          <p className="text-macos-gray-600">
-            Verify your attendance with blockchain technology
-          </p>
-        </div>
+        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6 lg:mb-8">
+          <div className="flex-1">
+            <h1 className={`text-responsive-2xl sm:text-responsive-3xl font-bold mb-2 ${
+              theme === 'dark' ? 'text-white' : 'text-slate-800'
+            }`}>
+              Event Check-in 📍
+            </h1>
+            <p className={`text-responsive-sm sm:text-responsive-base ${
+              theme === 'dark' ? 'text-cyber-cyan/80' : 'text-slate-700'
+            }`}>
+              Verify your attendance with blockchain technology
+            </p>
+          </div>
+        </header>
 
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
           {/* Event Details */}
           <GlassCard>
             <div className="mb-6">
@@ -241,15 +247,19 @@ const EventCheckin: React.FC = () => {
               <div className="flex items-center space-x-3">
                 <span className="text-2xl">🎉</span>
                 <div>
-                  <p className="font-medium text-macos-gray-800">Welcome to {event.name}!</p>
-                  <p className="text-sm text-macos-gray-600">Enjoy the event</p>
+                  <p className={`font-medium ${
+                    theme === 'dark' ? 'text-white' : 'text-slate-800'
+                  }`}>Welcome to {event.name}!</p>
+                  <p className={`text-responsive-sm ${
+                    theme === 'dark' ? 'text-cyber-cyan/80' : 'text-slate-600'
+                  }`}>Enjoy the event</p>
                 </div>
               </div>
             </div>
           </div>
         )}
       </div>
-    </div>
+    </ResponsiveLayout>
   );
 };
 

@@ -1,0 +1,527 @@
+/// Event Management Module for Attestify v2
+/// Handles creation, management, and attendance tracking for events with peer validation
+module eviden::events_v3 {
+    use std::string::String;
+    use std::vector;
+    use std::signer;
+    use aptos_framework::timestamp;
+    use aptos_std::table::{Self, Table};
+
+    /// Error codes
+    /// User is not authorized to perform this action
+    const E_NOT_AUTHORIZED: u64 = 1;
+    /// Event was not found in the registry
+    const E_EVENT_NOT_FOUND: u64 = 2;
+    /// Event has expired and check-in is no longer allowed
+    const E_EVENT_EXPIRED: u64 = 3;
+    /// User has already checked in to this event
+    const E_ALREADY_CHECKED_IN: u64 = 4;
+    /// User's location is outside the allowed check-in radius
+    const E_INVALID_LOCATION: u64 = 5;
+    /// Event has not started yet
+    const E_EVENT_NOT_STARTED: u64 = 6;
+    /// Event has reached maximum capacity
+    const E_EVENT_FULL: u64 = 7;
+    /// Cannot validate your own attendance
+    const E_CANNOT_SELF_VALIDATE: u64 = 8;
+    /// Attendee not checked in to this event
+    const E_ATTENDEE_NOT_FOUND: u64 = 9;
+    /// Already validated this attendee
+    const E_ALREADY_VALIDATED: u64 = 10;
+
+    /// Location structure for geofencing
+    struct Location has store, copy, drop {
+        latitude: u64,  // multiplied by 1000000 for precision
+        longitude: u64, // multiplied by 1000000 for precision
+        venue_name: String,
+    }
+
+    /// Event structure representing an attestable event
+    struct Event has store {
+        id: u64,
+        name: String,
+        description: String,
+        organizer: address,
+        start_time: u64,
+        end_time: u64,
+        location: Location,
+        max_attendees: u64,
+        current_attendees: u64,
+        check_in_radius: u64, // in meters
+        is_active: bool,
+        created_at: u64,
+    }
+
+    /// Attendance record for an individual
+    struct AttendanceRecord has store {
+        event_id: u64,
+        attendee: address,
+        check_in_time: u64,
+        location_verified: bool,
+        peer_validations: u64,
+        certificate_minted: bool,
+    }
+
+    /// Global event registry
+    struct EventRegistry has key {
+        events: Table<u64, Event>,
+        next_event_id: u64,
+        total_events: u64,
+    }
+
+    /// Attendance registry for tracking all attendances
+    struct AttendanceRegistry has key {
+        attendances: Table<u64, AttendanceRecord>,
+        user_attendances: Table<address, vector<u64>>,
+        // Track who validated whom: (event_id, attendee) -> vector of validators
+        peer_validations: Table<u64, Table<address, vector<address>>>,
+        // Track attendance IDs by event and attendee for easier lookup
+        event_attendee_to_id: Table<u64, Table<address, u64>>,
+        // Track attendees by event for easier listing
+        event_attendees: Table<u64, vector<address>>,
+        next_attendance_id: u64,
+    }
+
+    /// Initialize the module
+    fun init_module(account: &signer) {
+        move_to(account, EventRegistry {
+            events: table::new(),
+            next_event_id: 1,
+            total_events: 0,
+        });
+        
+        move_to(account, AttendanceRegistry {
+            attendances: table::new(),
+            user_attendances: table::new(),
+            peer_validations: table::new(),
+            event_attendee_to_id: table::new(),
+            event_attendees: table::new(),
+            next_attendance_id: 1,
+        });
+    }
+
+    #[test_only]
+    /// Initialize the module for testing
+    public fun init_module_for_testing(account: &signer) {
+        init_module(account);
+    }
+
+    /// Create a new event
+    public entry fun create_event(
+        organizer: &signer,
+        name: String,
+        description: String,
+        start_time: u64,
+        end_time: u64,
+        latitude: u64,
+        longitude: u64,
+        venue_name: String,
+        max_attendees: u64,
+        check_in_radius: u64,
+    ) acquires EventRegistry {
+        let organizer_addr = signer::address_of(organizer);
+        let registry = borrow_global_mut<EventRegistry>(@eviden);
+        
+        let event_id = registry.next_event_id;
+        
+        let location = Location {
+            latitude,
+            longitude,
+            venue_name,
+        };
+
+        let event = Event {
+            id: event_id,
+            name,
+            description,
+            organizer: organizer_addr,
+            start_time,
+            end_time,
+            location,
+            max_attendees,
+            current_attendees: 0,
+            check_in_radius,
+            is_active: true,
+            created_at: start_time, // Use start_time instead of current timestamp
+        };
+
+        table::add(&mut registry.events, event_id, event);
+        
+        registry.next_event_id = event_id + 1;
+        registry.total_events = registry.total_events + 1;
+    }
+
+    /// Check in to an event
+    public entry fun check_in_to_event(
+        attendee: &signer,
+        event_id: u64,
+        attendee_latitude: u64,
+        attendee_longitude: u64,
+    ) acquires EventRegistry, AttendanceRegistry {
+        let attendee_addr = signer::address_of(attendee);
+        let registry = borrow_global_mut<EventRegistry>(@eviden);
+        
+        // Check if event exists
+        assert!(table::contains(&registry.events, event_id), E_EVENT_NOT_FOUND);
+        let event_ref = table::borrow_mut(&mut registry.events, event_id);
+        assert!(event_ref.is_active, E_EVENT_NOT_FOUND);
+        
+        let current_time = timestamp::now_seconds();
+        assert!(current_time >= event_ref.start_time, E_EVENT_NOT_STARTED);
+        assert!(current_time <= event_ref.end_time, E_EVENT_EXPIRED);
+
+        // Check if event is full
+        assert!(event_ref.current_attendees < event_ref.max_attendees, E_EVENT_FULL);
+
+        // Verify location
+        let location_valid = verify_location(
+            attendee_latitude,
+            attendee_longitude,
+            event_ref.location.latitude,
+            event_ref.location.longitude,
+            event_ref.check_in_radius
+        );
+        assert!(location_valid, E_INVALID_LOCATION);
+
+        // Check for duplicate check-in
+        let attendance_registry = borrow_global_mut<AttendanceRegistry>(@eviden);
+        
+        // Initialize user attendance list if doesn't exist
+        if (!table::contains(&attendance_registry.user_attendances, attendee_addr)) {
+            table::add(&mut attendance_registry.user_attendances, attendee_addr, vector::empty());
+        };
+        
+        let user_events = table::borrow(&attendance_registry.user_attendances, attendee_addr);
+        let i = 0;
+        let len = vector::length(user_events);
+        while (i < len) {
+            let existing_event_id = *vector::borrow(user_events, i);
+            assert!(existing_event_id != event_id, E_ALREADY_CHECKED_IN);
+            i = i + 1;
+        };
+
+        // Create unique attendance ID
+        let attendance_id = attendance_registry.next_attendance_id;
+        attendance_registry.next_attendance_id = attendance_id + 1;
+        
+        let attendance = AttendanceRecord {
+            event_id,
+            attendee: attendee_addr,
+            check_in_time: current_time,
+            location_verified: true,
+            peer_validations: 0,
+            certificate_minted: false,
+        };
+
+        table::add(&mut attendance_registry.attendances, attendance_id, attendance);
+        
+        // Track the attendance ID for this event and attendee
+        if (!table::contains(&attendance_registry.event_attendee_to_id, event_id)) {
+            table::add(&mut attendance_registry.event_attendee_to_id, event_id, table::new());
+        };
+        let event_attendees = table::borrow_mut(&mut attendance_registry.event_attendee_to_id, event_id);
+        table::add(event_attendees, attendee_addr, attendance_id);
+        
+        // Add to event attendees list
+        if (!table::contains(&attendance_registry.event_attendees, event_id)) {
+            table::add(&mut attendance_registry.event_attendees, event_id, vector::empty());
+        };
+        let attendees_list = table::borrow_mut(&mut attendance_registry.event_attendees, event_id);
+        vector::push_back(attendees_list, attendee_addr);
+        
+        // Update user's attendance list
+        let user_events_mut = table::borrow_mut(&mut attendance_registry.user_attendances, attendee_addr);
+        vector::push_back(user_events_mut, event_id);
+        
+        // Increment current attendees
+        event_ref.current_attendees = event_ref.current_attendees + 1;
+
+        // Initialize peer validation table for this event if needed
+        if (!table::contains(&attendance_registry.peer_validations, event_id)) {
+            table::add(&mut attendance_registry.peer_validations, event_id, table::new());
+        };
+        
+        // Initialize peer validation list for this attendee
+        let event_validations = table::borrow_mut(&mut attendance_registry.peer_validations, event_id);
+        if (!table::contains(event_validations, attendee_addr)) {
+            table::add(event_validations, attendee_addr, vector::empty());
+        };
+    }
+
+    #[test_only]
+    /// Check in to an event for testing (without timestamp validation)
+    public fun check_in_to_event_for_testing(
+        attendee: &signer,
+        event_id: u64,
+        attendee_latitude: u64,
+        attendee_longitude: u64,
+    ) acquires EventRegistry, AttendanceRegistry {
+        let attendee_addr = signer::address_of(attendee);
+        let registry = borrow_global_mut<EventRegistry>(@eviden);
+        
+        // Check if event exists
+        assert!(table::contains(&registry.events, event_id), E_EVENT_NOT_FOUND);
+        let event_ref = table::borrow_mut(&mut registry.events, event_id);
+        assert!(event_ref.is_active, E_EVENT_NOT_FOUND);
+
+        // Check if event is full
+        assert!(event_ref.current_attendees < event_ref.max_attendees, E_EVENT_FULL);
+
+        // Verify location
+        let location_valid = verify_location(
+            attendee_latitude,
+            attendee_longitude,
+            event_ref.location.latitude,
+            event_ref.location.longitude,
+            event_ref.check_in_radius
+        );
+        assert!(location_valid, E_INVALID_LOCATION);
+
+        // Check for duplicate check-in
+        let attendance_registry = borrow_global_mut<AttendanceRegistry>(@eviden);
+        
+        // Initialize user attendance list if doesn't exist
+        if (!table::contains(&attendance_registry.user_attendances, attendee_addr)) {
+            table::add(&mut attendance_registry.user_attendances, attendee_addr, vector::empty());
+        };
+        
+        let user_events = table::borrow(&attendance_registry.user_attendances, attendee_addr);
+        let i = 0;
+        let len = vector::length(user_events);
+        while (i < len) {
+            let existing_event_id = *vector::borrow(user_events, i);
+            assert!(existing_event_id != event_id, E_ALREADY_CHECKED_IN);
+            i = i + 1;
+        };
+
+        // Create unique attendance ID
+        let attendance_id = attendance_registry.next_attendance_id;
+        attendance_registry.next_attendance_id = attendance_id + 1;
+        
+        let attendance = AttendanceRecord {
+            event_id,
+            attendee: attendee_addr,
+            check_in_time: 1700000000, // Fixed time for testing
+            location_verified: true,
+            peer_validations: 0,
+            certificate_minted: false,
+        };
+
+        table::add(&mut attendance_registry.attendances, attendance_id, attendance);
+        
+        // Track the attendance ID for this event and attendee
+        if (!table::contains(&attendance_registry.event_attendee_to_id, event_id)) {
+            table::add(&mut attendance_registry.event_attendee_to_id, event_id, table::new());
+        };
+        let event_attendees_map = table::borrow_mut(&mut attendance_registry.event_attendee_to_id, event_id);
+        table::add(event_attendees_map, attendee_addr, attendance_id);
+        
+        // Add to event attendees list
+        if (!table::contains(&attendance_registry.event_attendees, event_id)) {
+            table::add(&mut attendance_registry.event_attendees, event_id, vector::empty());
+        };
+        let attendees_list = table::borrow_mut(&mut attendance_registry.event_attendees, event_id);
+        vector::push_back(attendees_list, attendee_addr);
+        
+        // Update user's attendance list
+        let user_events_mut = table::borrow_mut(&mut attendance_registry.user_attendances, attendee_addr);
+        vector::push_back(user_events_mut, event_id);
+        
+        // Increment current attendees
+        event_ref.current_attendees = event_ref.current_attendees + 1;
+
+        // Initialize peer validation table for this event if needed
+        if (!table::contains(&attendance_registry.peer_validations, event_id)) {
+            table::add(&mut attendance_registry.peer_validations, event_id, table::new());
+        };
+        
+        // Initialize peer validation list for this attendee
+        let event_validations = table::borrow_mut(&mut attendance_registry.peer_validations, event_id);
+        if (!table::contains(event_validations, attendee_addr)) {
+            table::add(event_validations, attendee_addr, vector::empty());
+        };
+    }
+
+    /// Validate another attendee's presence at an event
+    public entry fun validate_peer_attendance(
+        validator: &signer,
+        event_id: u64,
+        attendee_to_validate: address,
+    ) acquires EventRegistry, AttendanceRegistry {
+        let validator_addr = signer::address_of(validator);
+        
+        // Ensure validator is not trying to validate themselves
+        assert!(validator_addr != attendee_to_validate, E_CANNOT_SELF_VALIDATE);
+        
+        // Check if event exists and is active
+        let registry = borrow_global<EventRegistry>(@eviden);
+        assert!(table::contains(&registry.events, event_id), E_EVENT_NOT_FOUND);
+        let event_ref = table::borrow(&registry.events, event_id);
+        assert!(event_ref.is_active, E_EVENT_NOT_FOUND);
+        
+        let attendance_registry = borrow_global_mut<AttendanceRegistry>(@eviden);
+        
+        // Verify both validator and attendee are checked in to this event
+        assert!(table::contains(&attendance_registry.user_attendances, validator_addr), E_ATTENDEE_NOT_FOUND);
+        assert!(table::contains(&attendance_registry.user_attendances, attendee_to_validate), E_ATTENDEE_NOT_FOUND);
+        
+        let validator_events = table::borrow(&attendance_registry.user_attendances, validator_addr);
+        let attendee_events = table::borrow(&attendance_registry.user_attendances, attendee_to_validate);
+        
+        // Check if both are attending this event
+        assert!(vector::contains(validator_events, &event_id), E_ATTENDEE_NOT_FOUND);
+        assert!(vector::contains(attendee_events, &event_id), E_ATTENDEE_NOT_FOUND);
+        
+        // Get or create validation table for this event
+        if (!table::contains(&attendance_registry.peer_validations, event_id)) {
+            table::add(&mut attendance_registry.peer_validations, event_id, table::new());
+        };
+        
+        let event_validations = table::borrow_mut(&mut attendance_registry.peer_validations, event_id);
+        
+        // Get or create validation list for the attendee
+        if (!table::contains(event_validations, attendee_to_validate)) {
+            table::add(event_validations, attendee_to_validate, vector::empty());
+        };
+        
+        let attendee_validators = table::borrow_mut(event_validations, attendee_to_validate);
+        
+        // Check if validator has already validated this attendee
+        assert!(!vector::contains(attendee_validators, &validator_addr), E_ALREADY_VALIDATED);
+        
+        // Add validator to the list
+        vector::push_back(attendee_validators, validator_addr);
+        
+        // Update the attendee's peer validation count in their attendance record
+        update_peer_validation_count(event_id, attendee_to_validate, &mut attendance_registry.attendances, &attendance_registry.event_attendee_to_id);
+    }
+
+    /// Helper function to update peer validation count in attendance record
+    fun update_peer_validation_count(
+        event_id: u64,
+        attendee: address,
+        attendances: &mut Table<u64, AttendanceRecord>,
+        event_attendee_to_id: &Table<u64, Table<address, u64>>
+    ) {
+        // Use the lookup table to find the attendance record efficiently
+        if (table::contains(event_attendee_to_id, event_id)) {
+            let event_attendees = table::borrow(event_attendee_to_id, event_id);
+            if (table::contains(event_attendees, attendee)) {
+                let attendance_id = *table::borrow(event_attendees, attendee);
+                let attendance = table::borrow_mut(attendances, attendance_id);
+                attendance.peer_validations = attendance.peer_validations + 1;
+            };
+        };
+    }
+
+    /// Simplified location verification
+    fun verify_location(
+        attendee_lat: u64,
+        attendee_lng: u64,
+        event_lat: u64,
+        event_lng: u64,
+        radius: u64
+    ): bool {
+        // Simplified distance calculation
+        let lat_diff = if (attendee_lat > event_lat) {
+            attendee_lat - event_lat
+        } else {
+            event_lat - attendee_lat
+        };
+        
+        let lng_diff = if (attendee_lng > event_lng) {
+            attendee_lng - event_lng
+        } else {
+            event_lng - attendee_lng
+        };
+        
+        // Simplified check - actual implementation would be more sophisticated
+        lat_diff <= radius && lng_diff <= radius
+    }
+
+    /// View function to get event details
+    #[view]
+    public fun get_event_details(event_id: u64): (String, String, address, u64, u64, bool) acquires EventRegistry {
+        let registry = borrow_global<EventRegistry>(@eviden);
+        assert!(table::contains(&registry.events, event_id), E_EVENT_NOT_FOUND);
+        let event_ref = table::borrow(&registry.events, event_id);
+        
+        (
+            event_ref.name,
+            event_ref.description,
+            event_ref.organizer,
+            event_ref.start_time,
+            event_ref.end_time,
+            event_ref.is_active
+        )
+    }
+
+    /// View function to get total events count
+    #[view]
+    public fun get_total_events(): u64 acquires EventRegistry {
+        let registry = borrow_global<EventRegistry>(@eviden);
+        registry.total_events
+    }
+
+    /// Get peer validation count for an attendee at an event
+    #[view]
+    public fun get_peer_validation_count(event_id: u64, attendee: address): u64 acquires AttendanceRegistry {
+        let registry = borrow_global<AttendanceRegistry>(@eviden);
+        
+        if (!table::contains(&registry.peer_validations, event_id)) {
+            return 0
+        };
+        
+        let event_validations = table::borrow(&registry.peer_validations, event_id);
+        
+        if (!table::contains(event_validations, attendee)) {
+            return 0
+        };
+        
+        let validators = table::borrow(event_validations, attendee);
+        vector::length(validators)
+    }
+
+    /// Get list of validators for an attendee at an event
+    #[view]
+    public fun get_peer_validators(event_id: u64, attendee: address): vector<address> acquires AttendanceRegistry {
+        let registry = borrow_global<AttendanceRegistry>(@eviden);
+        
+        if (!table::contains(&registry.peer_validations, event_id)) {
+            return vector::empty()
+        };
+        
+        let event_validations = table::borrow(&registry.peer_validations, event_id);
+        
+        if (!table::contains(event_validations, attendee)) {
+            return vector::empty()
+        };
+        
+        *table::borrow(event_validations, attendee)
+    }
+
+    /// Check if an attendee has been checked in to an event
+    #[view]
+    public fun is_checked_in(event_id: u64, attendee: address): bool acquires AttendanceRegistry {
+        let registry = borrow_global<AttendanceRegistry>(@eviden);
+        
+        if (!table::contains(&registry.user_attendances, attendee)) {
+            return false
+        };
+        
+        let user_events = table::borrow(&registry.user_attendances, attendee);
+        vector::contains(user_events, &event_id)
+    }
+
+    /// Get list of attendees for an event
+    #[view]
+    public fun get_event_attendees(event_id: u64): vector<address> acquires AttendanceRegistry {
+        let registry = borrow_global<AttendanceRegistry>(@eviden);
+        
+        if (table::contains(&registry.event_attendees, event_id)) {
+            *table::borrow(&registry.event_attendees, event_id)
+        } else {
+            vector::empty<address>()
+        }
+    }
+}

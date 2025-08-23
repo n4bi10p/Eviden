@@ -1,9 +1,9 @@
 #[test_only]
-module eviden::events_tests {
+module eviden::events_v3_tests {
     use std::string;
     use std::signer;
     use aptos_framework::account;
-    use eviden::events;
+    use eviden::events_v3;
 
     #[test(admin = @eviden, organizer = @0x123)]
     public fun test_create_event(admin: &signer, organizer: &signer) {
@@ -12,14 +12,14 @@ module eviden::events_tests {
         account::create_account_for_test(signer::address_of(organizer));
 
         // Initialize the events module
-        events::init_module_for_testing(admin);
+        events_v3::init_module_for_testing(admin);
 
         // Create an event
         let event_name = string::utf8(b"Blockchain Conference 2025");
         let event_description = string::utf8(b"A conference about blockchain technology");
         let venue_name = string::utf8(b"Convention Center");
         
-        events::create_event(
+        events_v3::create_event_for_testing(
             organizer,
             event_name,
             event_description,
@@ -33,12 +33,12 @@ module eviden::events_tests {
         );
 
         // Verify event was created
-        let total_events = events::get_total_events();
+        let total_events = events_v3::get_total_events();
         assert!(total_events == 1, 1);
 
-        // Verify event details
+        // This should fail - event doesn't exist
         let (name, description, organizer_addr, _start_time, _end_time, is_active) = 
-            events::get_event_details(1);
+            events_v3::get_event_details(1);
         
         assert!(name == event_name, 2);
         assert!(description == event_description, 3);
@@ -53,10 +53,10 @@ module eviden::events_tests {
         account::create_account_for_test(signer::address_of(organizer));
 
         // Initialize the events module
-        events::init_module_for_testing(admin);
+        events_v3::init_module_for_testing(admin);
 
         // Create first event
-        events::create_event(
+        events_v3::create_event_for_testing(
             organizer,
             string::utf8(b"Event 1"),
             string::utf8(b"First event"),
@@ -70,7 +70,7 @@ module eviden::events_tests {
         );
 
         // Create second event
-        events::create_event(
+        events_v3::create_event_for_testing(
             organizer,
             string::utf8(b"Event 2"),
             string::utf8(b"Second event"),
@@ -84,15 +84,15 @@ module eviden::events_tests {
         );
 
         // Verify both events were created
-        let total_events = events::get_total_events();
+        let total_events = events_v3::get_total_events();
         assert!(total_events == 2, 1);
 
         // Verify first event details
-        let (name1, _desc1, _org1, _start1, _end1, _active1) = events::get_event_details(1);
+        let (name1, _desc1, _org1, _start1, _end1, _active1) = events_v3::get_event_details(1);
         assert!(name1 == string::utf8(b"Event 1"), 2);
 
         // Verify second event details
-        let (name2, _desc2, _org2, _start2, _end2, _active2) = events::get_event_details(2);
+        let (name2, _desc2, _org2, _start2, _end2, _active2) = events_v3::get_event_details(2);
         assert!(name2 == string::utf8(b"Event 2"), 3);
     }
 }

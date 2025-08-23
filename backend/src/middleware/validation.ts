@@ -4,7 +4,7 @@ import { ValidationError } from './errorHandler';
 
 // Common validation schemas
 export const commonSchemas = {
-  address: Joi.string().pattern(/^0x[a-fA-F0-9]{64}$/).required().messages({
+  address: Joi.string().pattern(/^0x[a-fA-F0-9]+$/).required().messages({
     'string.pattern.base': 'Invalid Aptos address format'
   }),
   
@@ -128,15 +128,21 @@ export const userSchemas = {
     address: commonSchemas.address,
     signature: Joi.string().required(),
     message: Joi.string().required(),
-    email: Joi.string().email().optional(),
-    username: Joi.string().pattern(/^[a-zA-Z0-9_-]{3,30}$/).optional(),
-    full_name: Joi.string().min(2).max(100).optional()
+    nonce: Joi.string().required(),
+    timestamp: Joi.number().required(),
+    role: Joi.string().valid('attendee', 'organizer').required(),
+    name: Joi.string().min(2).max(100).required(),
+    email: Joi.string().email().required(),
+    organizationName: Joi.string().min(2).max(100).optional(),
+    organizationDescription: Joi.string().max(500).optional()
   }),
 
   login: Joi.object({
     address: commonSchemas.address,
     signature: Joi.string().required(),
-    message: Joi.string().required()
+    message: Joi.string().required(),
+    nonce: Joi.string().required(),
+    timestamp: Joi.number().required()
   })
 };
 

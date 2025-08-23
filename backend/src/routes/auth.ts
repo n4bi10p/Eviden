@@ -12,10 +12,11 @@ const router = Router();
 interface User {
   id: string;
   address: string;
-  email?: string;
-  username?: string;
-  full_name?: string;
+  email: string;
+  name: string;
   role: string;
+  organizationName?: string;
+  organizationDescription?: string;
   created_at: number;
   last_login?: number;
 }
@@ -38,7 +39,19 @@ router.post('/register',
   authRateLimit.middleware,
   validate(userSchemas.register),
   asyncHandler(async (req: Request, res: Response) => {
-    const { address, email, username, full_name, bio, avatar_url, location, social_links, preferences } = req.body;
+    const { address, signature, message, nonce, timestamp, role, name, email, organizationName, organizationDescription } = req.body;
+
+    // Verify signature
+    const isValidSignature = verifySignature(message, signature, address);
+    if (!isValidSignature) {
+      throw new AuthenticationError('Invalid signature');
+    }
+
+    // Check timestamp (should be within last 5 minutes)
+    const now = Math.floor(Date.now() / 1000);
+    if (Math.abs(now - timestamp) > 300) { // 5 minutes
+      throw new AuthenticationError('Signature timestamp expired');
+    }
 
     // Check if user already exists
     if (users.has(address)) {
@@ -57,9 +70,10 @@ router.post('/register',
       id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       address,
       email,
-      username,
-      full_name,
-      role: 'user',
+      name,
+      role: role || 'attendee',
+      organizationName,
+      organizationDescription,
       created_at: Math.floor(Date.now() / 1000),
     };
 
@@ -81,9 +95,10 @@ router.post('/register',
           id: newUser.id,
           address: newUser.address,
           email: newUser.email,
-          username: newUser.username,
-          full_name: newUser.full_name,
+          name: newUser.name,
           role: newUser.role,
+          organizationName: newUser.organizationName,
+          organizationDescription: newUser.organizationDescription,
           created_at: newUser.created_at
         },
         token,
@@ -142,9 +157,10 @@ router.post('/login',
           id: user.id,
           address: user.address,
           email: user.email,
-          username: user.username,
-          full_name: user.full_name,
+          name: user.name,
           role: user.role,
+          organizationName: user.organizationName,
+          organizationDescription: user.organizationDescription,
           last_login: user.last_login
         },
         token,
@@ -205,9 +221,10 @@ router.get('/profile',
           id: user.id,
           address: user.address,
           email: user.email,
-          username: user.username,
-          full_name: user.full_name,
+          name: user.name,
           role: user.role,
+          organizationName: user.organizationName,
+          organizationDescription: user.organizationDescription,
           created_at: user.created_at,
           last_login: user.last_login
         }
@@ -298,7 +315,7 @@ router.get('/nonce/:address',
   asyncHandler(async (req: Request, res: Response) => {
     const { address } = req.params;
 
-    if (!address || !address.match(/^0x[a-fA-F0-9]{64}$/)) {
+    if (!address || !address.match(/^0x[a-fA-F0-9]+$/)) {
       throw new ValidationError('Invalid address format');
     }
 

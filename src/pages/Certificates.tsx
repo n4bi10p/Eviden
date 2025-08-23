@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import GlassCard from '../components/GlassCard';
 import MacOSButton from '../components/MacOSButton';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Certificates: React.FC = () => {
+  const { theme } = useTheme();
   const [selectedCertificate, setSelectedCertificate] = useState<any>(null);
 
   const certificates = [
@@ -55,10 +57,14 @@ const Certificates: React.FC = () => {
       <div className="flex-1 ml-64 p-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-macos-gray-800 mb-2">
+          <h1 className={`text-3xl font-bold mb-2 ${
+            theme === 'dark' ? 'text-white/60' : 'text-macos-gray-800'
+          }`}>
             My Certificates 🏆
           </h1>
-          <p className="text-macos-gray-600">
+          <p className={`${
+            theme === 'dark' ? 'text-white/40' : 'text-macos-gray-600'
+          }`}>
             Your verified blockchain credentials and achievements
           </p>
         </div>
@@ -69,20 +75,32 @@ const Certificates: React.FC = () => {
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <GlassCard className="text-center">
-                <div className="text-3xl font-bold text-macos-blue mb-2">{certificates.length}</div>
-                <div className="text-macos-gray-600">Total Certificates</div>
+                <div className={`text-3xl font-bold mb-2 ${
+                  theme === 'dark' ? 'text-blue-400/60' : 'text-macos-blue'
+                }`}>{certificates.length}</div>
+                <div className={`${
+                  theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+                }`}>Total Certificates</div>
               </GlassCard>
               <GlassCard className="text-center">
-                <div className="text-3xl font-bold text-macos-green mb-2">
+                <div className={`text-3xl font-bold mb-2 ${
+                  theme === 'dark' ? 'text-green-400/60' : 'text-macos-green'
+                }`}>
                   {Math.round(certificates.reduce((acc, cert) => acc + cert.verificationScore, 0) / certificates.length)}%
                 </div>
-                <div className="text-macos-gray-600">Avg. Verification</div>
+                <div className={`${
+                  theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+                }`}>Avg. Verification</div>
               </GlassCard>
               <GlassCard className="text-center">
-                <div className="text-3xl font-bold text-macos-purple mb-2">
+                <div className={`text-3xl font-bold mb-2 ${
+                  theme === 'dark' ? 'text-purple-400/60' : 'text-macos-purple'
+                }`}>
                   {certificates.reduce((acc, cert) => acc + cert.attendees, 0)}
                 </div>
-                <div className="text-macos-gray-600">Community Reach</div>
+                <div className={`${
+                  theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+                }`}>Community Reach</div>
               </GlassCard>
             </div>
 
@@ -101,30 +119,50 @@ const Certificates: React.FC = () => {
                     </div>
                     <span className={`
                       px-3 py-1 rounded-full text-xs font-medium
-                      ${certificate.type === 'attendance' ? 'bg-macos-blue/20 text-macos-blue' :
-                        certificate.type === 'completion' ? 'bg-macos-green/20 text-macos-green' :
-                        'bg-macos-purple/20 text-macos-purple'}
+                      ${certificate.type === 'attendance' 
+                        ? theme === 'dark' 
+                          ? 'bg-blue-400/20 text-blue-400/80' 
+                          : 'bg-macos-blue/20 text-macos-blue'
+                        : certificate.type === 'completion' 
+                        ? theme === 'dark'
+                          ? 'bg-green-400/20 text-green-400/80'
+                          : 'bg-macos-green/20 text-macos-green'
+                        : theme === 'dark'
+                          ? 'bg-purple-400/20 text-purple-400/80'
+                          : 'bg-macos-purple/20 text-macos-purple'}
                     `}>
                       {certificate.type}
                     </span>
                   </div>
 
                   {/* Certificate Info */}
-                  <h3 className="font-bold text-macos-gray-800 mb-2 text-center">
+                  <h3 className={`font-bold mb-2 text-center ${
+                    theme === 'dark' ? 'text-white/60' : 'text-macos-gray-800'
+                  }`}>
                     {certificate.eventName}
                   </h3>
-                  <p className="text-sm text-macos-gray-600 text-center mb-3">
+                  <p className={`text-sm text-center mb-3 ${
+                    theme === 'dark' ? 'text-white/40' : 'text-macos-gray-600'
+                  }`}>
                     {certificate.organizer}
                   </p>
 
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-macos-gray-600">Date:</span>
-                      <span className="text-macos-gray-800">{certificate.date}</span>
+                      <span className={`${
+                        theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+                      }`}>Date:</span>
+                      <span className={`${
+                        theme === 'dark' ? 'text-white/50' : 'text-macos-gray-800'
+                      }`}>{certificate.date}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-macos-gray-600">Verification:</span>
-                      <span className="text-macos-green font-medium">{certificate.verificationScore}%</span>
+                      <span className={`${
+                        theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+                      }`}>Verification:</span>
+                      <span className={`font-medium ${
+                        theme === 'dark' ? 'text-green-400/80' : 'text-macos-green'
+                      }`}>{certificate.verificationScore}%</span>
                     </div>
                   </div>
 

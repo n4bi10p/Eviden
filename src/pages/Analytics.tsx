@@ -2,8 +2,11 @@ import React from 'react';
 import Sidebar from '../components/Sidebar';
 import GlassCard from '../components/GlassCard';
 import MacOSButton from '../components/MacOSButton';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Analytics: React.FC = () => {
+  const { theme } = useTheme();
+  
   const stats = {
     totalEvents: 12,
     totalAttendees: 1547,
@@ -41,10 +44,14 @@ const Analytics: React.FC = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-macos-gray-800 mb-2">
+            <h1 className={`text-3xl font-bold mb-2 ${
+              theme === 'dark' ? 'text-white/60' : 'text-macos-gray-800'
+            }`}>
               Analytics Dashboard 📊
             </h1>
-            <p className="text-macos-gray-600">
+            <p className={`${
+              theme === 'dark' ? 'text-white/40' : 'text-macos-gray-600'
+            }`}>
               Track your event performance and attendee engagement
             </p>
           </div>
@@ -62,23 +69,39 @@ const Analytics: React.FC = () => {
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
           <GlassCard className="text-center">
-            <div className="text-2xl font-bold text-macos-blue mb-1">{stats.totalEvents}</div>
-            <div className="text-sm text-macos-gray-600">Total Events</div>
+            <div className={`text-2xl font-bold mb-1 ${
+              theme === 'dark' ? 'text-blue-400/60' : 'text-macos-blue'
+            }`}>{stats.totalEvents}</div>
+            <div className={`text-sm ${
+              theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+            }`}>Total Events</div>
           </GlassCard>
           
           <GlassCard className="text-center">
-            <div className="text-2xl font-bold text-macos-green mb-1">{stats.totalAttendees.toLocaleString()}</div>
-            <div className="text-sm text-macos-gray-600">Total Attendees</div>
+            <div className={`text-2xl font-bold mb-1 ${
+              theme === 'dark' ? 'text-green-400/60' : 'text-macos-green'
+            }`}>{stats.totalAttendees.toLocaleString()}</div>
+            <div className={`text-sm ${
+              theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+            }`}>Total Attendees</div>
           </GlassCard>
           
           <GlassCard className="text-center">
-            <div className="text-2xl font-bold text-macos-teal mb-1">{stats.verificationRate}%</div>
-            <div className="text-sm text-macos-gray-600">Verification Rate</div>
+            <div className={`text-2xl font-bold mb-1 ${
+              theme === 'dark' ? 'text-teal-400/60' : 'text-macos-teal'
+            }`}>{stats.verificationRate}%</div>
+            <div className={`text-sm ${
+              theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+            }`}>Verification Rate</div>
           </GlassCard>
           
           <GlassCard className="text-center">
-            <div className="text-2xl font-bold text-macos-purple mb-1">{stats.averageRating}</div>
-            <div className="text-sm text-macos-gray-600">Avg Rating</div>
+            <div className={`text-2xl font-bold mb-1 ${
+              theme === 'dark' ? 'text-purple-400/60' : 'text-macos-purple'
+            }`}>{stats.averageRating}</div>
+            <div className={`text-sm ${
+              theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+            }`}>Avg Rating</div>
           </GlassCard>
           
           <GlassCard className="text-center">

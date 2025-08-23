@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface MacOSSwitchProps {
   checked: boolean;
@@ -13,19 +14,26 @@ const MacOSSwitch: React.FC<MacOSSwitchProps> = ({
   label,
   disabled = false
 }) => {
+  const { theme } = useTheme();
+  
   return (
     <div className="flex items-center space-x-3">
       {label && (
-        <span className="text-sm font-medium text-macos-gray-700">{label}</span>
+        <span className={`text-sm font-medium ${
+          theme === 'dark' ? 'text-white/60' : 'text-slate-700'
+        }`}>{label}</span>
       )}
       <button
         onClick={() => !disabled && onChange(!checked)}
         disabled={disabled}
         className={`
           relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ease-in-out
-          ${checked ? 'bg-macos-green' : 'bg-macos-gray-300'}
+          ${checked 
+            ? 'bg-blue-500' 
+            : theme === 'dark' ? 'bg-white/20' : 'bg-gray-300'
+          }
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-          focus:outline-none focus:ring-2 focus:ring-macos-green focus:ring-offset-2
+          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
         `}
       >
         <span

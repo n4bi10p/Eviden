@@ -2,8 +2,11 @@ import React from 'react';
 import Sidebar from '../components/Sidebar';
 import GlassCard from '../components/GlassCard';
 import MacOSButton from '../components/MacOSButton';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Events: React.FC = () => {
+  const { theme } = useTheme();
+  
   const events = [
     {
       id: 1,
@@ -57,10 +60,14 @@ const Events: React.FC = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-macos-gray-800 mb-2">
+            <h1 className={`text-3xl font-bold mb-2 ${
+              theme === 'dark' ? 'text-white/60' : 'text-macos-gray-800'
+            }`}>
               Discover Events 🎯
             </h1>
-            <p className="text-macos-gray-600">
+            <p className={`${
+              theme === 'dark' ? 'text-white/40' : 'text-macos-gray-600'
+            }`}>
               Find and attend blockchain events with verified certificates
             </p>
           </div>
@@ -73,20 +80,36 @@ const Events: React.FC = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <GlassCard className="text-center">
-            <div className="text-2xl font-bold text-macos-blue mb-1">12</div>
-            <div className="text-sm text-macos-gray-600">Upcoming Events</div>
+            <div className={`text-2xl font-bold mb-1 ${
+              theme === 'dark' ? 'text-blue-400/60' : 'text-macos-blue'
+            }`}>12</div>
+            <div className={`text-sm ${
+              theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+            }`}>Upcoming Events</div>
           </GlassCard>
           <GlassCard className="text-center">
-            <div className="text-2xl font-bold text-macos-green mb-1">3.2K</div>
-            <div className="text-sm text-macos-gray-600">Total Attendees</div>
+            <div className={`text-2xl font-bold mb-1 ${
+              theme === 'dark' ? 'text-green-400/60' : 'text-macos-green'
+            }`}>3.2K</div>
+            <div className={`text-sm ${
+              theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+            }`}>Total Attendees</div>
           </GlassCard>
           <GlassCard className="text-center">
-            <div className="text-2xl font-bold text-macos-purple mb-1">45</div>
-            <div className="text-sm text-macos-gray-600">Cities Worldwide</div>
+            <div className={`text-2xl font-bold mb-1 ${
+              theme === 'dark' ? 'text-purple-400/60' : 'text-macos-purple'
+            }`}>45</div>
+            <div className={`text-sm ${
+              theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+            }`}>Cities Worldwide</div>
           </GlassCard>
           <GlassCard className="text-center">
-            <div className="text-2xl font-bold text-macos-teal mb-1">98%</div>
-            <div className="text-sm text-macos-gray-600">Verification Rate</div>
+            <div className={`text-2xl font-bold mb-1 ${
+              theme === 'dark' ? 'text-teal-400/60' : 'text-macos-teal'
+            }`}>98%</div>
+            <div className={`text-sm ${
+              theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+            }`}>Verification Rate</div>
           </GlassCard>
         </div>
 
@@ -99,10 +122,16 @@ const Events: React.FC = () => {
                 <span className={`
                   px-3 py-1 rounded-full text-xs font-semibold
                   ${event.status === 'upcoming' 
-                    ? 'bg-macos-blue/20 text-macos-blue border border-macos-blue/30' 
+                    ? theme === 'dark' 
+                      ? 'bg-blue-400/20 text-blue-400/80 border border-blue-400/30'
+                      : 'bg-macos-blue/20 text-macos-blue border border-macos-blue/30'
                     : event.status === 'completed'
-                    ? 'bg-macos-gray-300/20 text-macos-gray-600 border border-macos-gray-300/30'
-                    : 'bg-macos-green/20 text-macos-green border border-macos-green/30'
+                    ? theme === 'dark'
+                      ? 'bg-white/10 text-white/50 border border-white/20'
+                      : 'bg-macos-gray-300/20 text-macos-gray-600 border border-macos-gray-300/30'
+                    : theme === 'dark'
+                      ? 'bg-green-400/20 text-green-400/80 border border-green-400/30'
+                      : 'bg-macos-green/20 text-macos-green border border-macos-green/30'
                   }
                 `}>
                   {event.status === 'upcoming' ? '📅 Upcoming' : 
@@ -112,34 +141,56 @@ const Events: React.FC = () => {
 
               {/* Event Content */}
               <div className="pt-2">
-                <h3 className="text-lg font-bold text-macos-gray-800 mb-2 pr-20">
+                <h3 className={`text-lg font-bold mb-2 pr-20 ${
+                  theme === 'dark' ? 'text-white/60' : 'text-macos-gray-800'
+                }`}>
                   {event.title}
                 </h3>
                 
-                <p className="text-sm text-macos-blue font-medium mb-3">
+                <p className={`text-sm font-medium mb-3 ${
+                  theme === 'dark' ? 'text-blue-400/60' : 'text-macos-blue'
+                }`}>
                   by {event.organizer}
                 </p>
 
                 <div className="space-y-2 mb-4 text-sm">
-                  <div className="flex items-center text-macos-gray-700">
-                    <span className="text-macos-blue mr-2">📅</span>
+                  <div className={`flex items-center ${
+                    theme === 'dark' ? 'text-white/50' : 'text-macos-gray-700'
+                  }`}>
+                    <span className={`mr-2 ${
+                      theme === 'dark' ? 'text-blue-400/60' : 'text-macos-blue'
+                    }`}>📅</span>
                     {event.date}
                   </div>
-                  <div className="flex items-center text-macos-gray-700">
-                    <span className="text-macos-blue mr-2">⏰</span>
+                  <div className={`flex items-center ${
+                    theme === 'dark' ? 'text-white/50' : 'text-macos-gray-700'
+                  }`}>
+                    <span className={`mr-2 ${
+                      theme === 'dark' ? 'text-blue-400/60' : 'text-macos-blue'
+                    }`}>⏰</span>
                     {event.time}
                   </div>
-                  <div className="flex items-center text-macos-gray-700">
-                    <span className="text-macos-blue mr-2">📍</span>
+                  <div className={`flex items-center ${
+                    theme === 'dark' ? 'text-white/50' : 'text-macos-gray-700'
+                  }`}>
+                    <span className={`mr-2 ${
+                      theme === 'dark' ? 'text-blue-400/60' : 'text-macos-blue'
+                    }`}>📍</span>
                     {event.location}
                   </div>
-                  <div className="flex items-center text-macos-gray-700">
-                    <span className="text-macos-blue mr-2">💰</span>
+                  <div className={`flex items-center ${
+                    theme === 'dark' ? 'text-white/50' : 'text-macos-gray-700'
+                  }`}>
+                    <span className={`mr-2 ${
+                      theme === 'dark' ? 'text-blue-400/60' : 'text-macos-blue'
+                    }`}>💰</span>
                     {event.price}
                   </div>
                 </div>
 
-                <p className="text-sm text-macos-gray-600 mb-4">
+                <p className={`text-sm mb-4 ${
+                  theme === 'dark' ? 'text-white/40' : 'text-macos-gray-600'
+                }`}>
                   {event.description}
                 </p>
 
@@ -148,7 +199,11 @@ const Events: React.FC = () => {
                   {event.tags.map((tag, index) => (
                     <span 
                       key={index}
-                      className="px-2 py-1 bg-macos-gray-100 text-macos-gray-700 rounded-lg text-xs"
+                      className={`px-2 py-1 rounded-lg text-xs ${
+                        theme === 'dark' 
+                          ? 'bg-white/10 text-white/50'
+                          : 'bg-macos-gray-100 text-macos-gray-700'
+                      }`}
                     >
                       {tag}
                     </span>
@@ -158,14 +213,24 @@ const Events: React.FC = () => {
                 {/* Attendee Progress */}
                 <div className="mb-4">
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-macos-gray-600">Attendees</span>
-                    <span className="text-macos-gray-800">
+                    <span className={`${
+                      theme === 'dark' ? 'text-white/30' : 'text-macos-gray-600'
+                    }`}>Attendees</span>
+                    <span className={`${
+                      theme === 'dark' ? 'text-white/50' : 'text-macos-gray-800'
+                    }`}>
                       {event.attendees}/{event.maxAttendees}
                     </span>
                   </div>
-                  <div className="w-full bg-macos-gray-200 rounded-full h-2">
+                  <div className={`w-full rounded-full h-2 ${
+                    theme === 'dark' ? 'bg-white/10' : 'bg-macos-gray-200'
+                  }`}>
                     <div 
-                      className="bg-gradient-to-r from-macos-blue to-macos-teal h-2 rounded-full transition-all duration-300"
+                      className={`h-2 rounded-full transition-all duration-300 ${
+                        theme === 'dark' 
+                          ? 'bg-gradient-to-r from-blue-400/60 to-teal-400/60'
+                          : 'bg-gradient-to-r from-macos-blue to-macos-teal'
+                      }`}
                       style={{ width: `${(event.attendees / event.maxAttendees) * 100}%` }}
                     ></div>
                   </div>

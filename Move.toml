@@ -1,0 +1,17 @@
+[package]
+name = "eviden"
+version = "1.0.0"
+authors = ["Attestify Team"]
+license = "MIT"
+
+[addresses]
+eviden = "0x64f6979360f13452cd87d367490075326f8e73d21a8bc746695f8d15e12e2016"
+
+[dev-addresses]
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-framework.git"
+rev = "mainnet"
+subdir = "aptos-framework"
+
+[dev-dependencies]

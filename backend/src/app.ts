@@ -17,11 +17,15 @@ import certificateRoutes from './routes/certificates';
 import userRoutes from './routes/users';
 import notificationRoutes from './routes/notifications';
 import uploadRoutes from './routes/uploads';
+import qrCodeRoutes from './routes/qr-codes';
+import pushNotificationRoutes from './routes/push-notifications';
 
 // Import services
 import { JobService } from './services/JobService';
 import { emailService } from './services/EmailService';
 import { fileUploadService } from './services/FileUploadService';
+import { qrCodeService } from './services/QRCodeService';
+import { webPushService } from './services/WebPushService';
 
 // Initialize error handlers
 handleUnhandledRejection();
@@ -164,6 +168,8 @@ class App {
     this.app.use('/api/users', userRoutes);
     this.app.use('/api/notifications', notificationRoutes);
     this.app.use('/api/uploads', uploadRoutes);
+    this.app.use('/api/qr-codes', qrCodeRoutes);
+    this.app.use('/api/push-notifications', pushNotificationRoutes);
 
     // Serve uploaded files statically
     this.app.use('/uploads', express.static('uploads'));

@@ -1,7 +1,7 @@
 /// Event Management Module for Attestify v2
 /// Handles creation, management, and attendance tracking for events with peer validation
 module eviden::events_v3 {
-    use std::string::String;
+    use std::string::{Self, String};
     use std::vector;
     use std::signer;
     use aptos_framework::timestamp;
@@ -28,6 +28,20 @@ module eviden::events_v3 {
     const E_ATTENDEE_NOT_FOUND: u64 = 9;
     /// Already validated this attendee
     const E_ALREADY_VALIDATED: u64 = 10;
+    /// Certificate not yet earned
+    const E_CERTIFICATE_NOT_EARNED: u64 = 11;
+    /// Certificate already minted
+    const E_CERTIFICATE_ALREADY_MINTED: u64 = 12;
+
+    /// Certificate tier levels
+    const CERTIFICATE_BRONZE: u8 = 1;
+    const CERTIFICATE_SILVER: u8 = 2;
+    const CERTIFICATE_GOLD: u8 = 3;
+    
+    /// Minimum validations required for each tier
+    const BRONZE_MIN_VALIDATIONS: u64 = 1;
+    const SILVER_MIN_VALIDATIONS: u64 = 3;
+    const GOLD_MIN_VALIDATIONS: u64 = 5;
 
     /// Location structure for geofencing
     struct Location has store, copy, drop {
@@ -82,6 +96,27 @@ module eviden::events_v3 {
         next_attendance_id: u64,
     }
 
+    /// Digital certificate for event attendance
+    struct Certificate has store {
+        certificate_id: u64,
+        event_id: u64,
+        attendee: address,
+        event_name: String,
+        validation_score: u64,
+        certificate_tier: u8, // Bronze(1), Silver(2), Gold(3)
+        issued_at: u64,
+        metadata_uri: String,
+    }
+
+    /// Certificate registry for tracking all certificates
+    struct CertificateRegistry has key {
+        certificates: Table<u64, Certificate>,
+        user_certificates: Table<address, vector<u64>>,
+        event_certificates: Table<u64, vector<u64>>,
+        next_certificate_id: u64,
+        total_certificates: u64,
+    }
+
     /// Initialize the module
     fun init_module(account: &signer) {
         move_to(account, EventRegistry {
@@ -98,12 +133,37 @@ module eviden::events_v3 {
             event_attendees: table::new(),
             next_attendance_id: 1,
         });
+
+        move_to(account, CertificateRegistry {
+            certificates: table::new(),
+            user_certificates: table::new(),
+            event_certificates: table::new(),
+            next_certificate_id: 1,
+            total_certificates: 0,
+        });
     }
 
     #[test_only]
     /// Initialize the module for testing
     public fun init_module_for_testing(account: &signer) {
         init_module(account);
+    }
+
+    /// Upgrade function to initialize certificate registry for existing deployments
+    public entry fun initialize_certificate_registry(admin: &signer) {
+        let admin_addr = signer::address_of(admin);
+        assert!(admin_addr == @eviden, E_NOT_AUTHORIZED);
+        
+        // Only initialize if it doesn't exist
+        if (!exists<CertificateRegistry>(@eviden)) {
+            move_to(admin, CertificateRegistry {
+                certificates: table::new(),
+                user_certificates: table::new(),
+                event_certificates: table::new(),
+                next_certificate_id: 1,
+                total_certificates: 0,
+            });
+        };
     }
 
     #[test_only]
@@ -485,6 +545,127 @@ module eviden::events_v3 {
         lat_diff <= radius && lng_diff <= radius
     }
 
+    /// Determine certificate tier based on validation count
+    fun get_certificate_tier(validation_count: u64): u8 {
+        if (validation_count >= GOLD_MIN_VALIDATIONS) {
+            CERTIFICATE_GOLD
+        } else if (validation_count >= SILVER_MIN_VALIDATIONS) {
+            CERTIFICATE_SILVER
+        } else if (validation_count >= BRONZE_MIN_VALIDATIONS) {
+            CERTIFICATE_BRONZE
+        } else {
+            0 // No certificate earned
+        }
+    }
+
+    /// Generate metadata URI for certificate
+    fun generate_metadata_uri(
+        event_name: String,
+        tier: u8,
+        _validation_score: u64
+    ): String {
+        let tier_name = if (tier == CERTIFICATE_GOLD) {
+            string::utf8(b"Gold")
+        } else if (tier == CERTIFICATE_SILVER) {
+            string::utf8(b"Silver")
+        } else {
+            string::utf8(b"Bronze")
+        };
+        
+        // In a real implementation, this would generate a JSON metadata URI
+        // For now, we'll create a simple string representation
+        let base_uri = string::utf8(b"https://attestify.io/certificates/");
+        string::append(&mut base_uri, tier_name);
+        string::append(&mut base_uri, string::utf8(b"/"));
+        string::append(&mut base_uri, event_name);
+        base_uri
+    }
+
+    /// Mint a certificate for an attendee
+    public entry fun mint_certificate(
+        attendee: &signer,
+        event_id: u64,
+    ) acquires EventRegistry, AttendanceRegistry, CertificateRegistry {
+        let attendee_addr = signer::address_of(attendee);
+        
+        // Verify event exists
+        let event_registry = borrow_global<EventRegistry>(@eviden);
+        assert!(table::contains(&event_registry.events, event_id), E_EVENT_NOT_FOUND);
+        let event_ref = table::borrow(&event_registry.events, event_id);
+        let event_name = event_ref.name;
+        
+        // Get validation count first (before borrowing AttendanceRegistry mutably)
+        let validation_count = get_peer_validation_count(event_id, attendee_addr);
+        let certificate_tier = get_certificate_tier(validation_count);
+        assert!(certificate_tier > 0, E_CERTIFICATE_NOT_EARNED);
+        
+        // Now borrow AttendanceRegistry and verify attendee
+        let attendance_registry = borrow_global<AttendanceRegistry>(@eviden);
+        assert!(table::contains(&attendance_registry.user_attendances, attendee_addr), E_ATTENDEE_NOT_FOUND);
+        let user_events = table::borrow(&attendance_registry.user_attendances, attendee_addr);
+        assert!(vector::contains(user_events, &event_id), E_ATTENDEE_NOT_FOUND);
+        
+        // Check if certificate already minted
+        if (table::contains(&attendance_registry.event_attendee_to_id, event_id)) {
+            let event_attendees = table::borrow(&attendance_registry.event_attendee_to_id, event_id);
+            if (table::contains(event_attendees, attendee_addr)) {
+                let attendance_id = *table::borrow(event_attendees, attendee_addr);
+                let attendance = table::borrow(&attendance_registry.attendances, attendance_id);
+                assert!(!attendance.certificate_minted, E_CERTIFICATE_ALREADY_MINTED);
+            };
+        };
+        
+        // Generate metadata URI
+        let metadata_uri = generate_metadata_uri(event_name, certificate_tier, validation_count);
+        
+        // Mint certificate
+        let cert_registry = borrow_global_mut<CertificateRegistry>(@eviden);
+        let certificate_id = cert_registry.next_certificate_id;
+        cert_registry.next_certificate_id = certificate_id + 1;
+        
+        let certificate = Certificate {
+            certificate_id,
+            event_id,
+            attendee: attendee_addr,
+            event_name,
+            validation_score: validation_count,
+            certificate_tier,
+            issued_at: 1700000000, // Fixed timestamp for testing - in production use timestamp::now_seconds()
+            metadata_uri,
+        };
+        
+        // Store certificate
+        table::add(&mut cert_registry.certificates, certificate_id, certificate);
+        
+        // Update user certificates
+        if (!table::contains(&cert_registry.user_certificates, attendee_addr)) {
+            table::add(&mut cert_registry.user_certificates, attendee_addr, vector::empty());
+        };
+        let user_certs = table::borrow_mut(&mut cert_registry.user_certificates, attendee_addr);
+        vector::push_back(user_certs, certificate_id);
+        
+        // Update event certificates
+        if (!table::contains(&cert_registry.event_certificates, event_id)) {
+            table::add(&mut cert_registry.event_certificates, event_id, vector::empty());
+        };
+        let event_certs = table::borrow_mut(&mut cert_registry.event_certificates, event_id);
+        vector::push_back(event_certs, certificate_id);
+        
+        // Update total certificates
+        cert_registry.total_certificates = cert_registry.total_certificates + 1;
+        
+        // Mark certificate as minted in attendance record
+        let attendance_registry_mut = borrow_global_mut<AttendanceRegistry>(@eviden);
+        if (table::contains(&attendance_registry_mut.event_attendee_to_id, event_id)) {
+            let event_attendees = table::borrow(&attendance_registry_mut.event_attendee_to_id, event_id);
+            if (table::contains(event_attendees, attendee_addr)) {
+                let attendance_id = *table::borrow(event_attendees, attendee_addr);
+                let attendance = table::borrow_mut(&mut attendance_registry_mut.attendances, attendance_id);
+                attendance.certificate_minted = true;
+            };
+        };
+    }
+
     /// View function to get event details
     #[view]
     public fun get_event_details(event_id: u64): (String, String, address, u64, u64, bool) acquires EventRegistry {
@@ -569,5 +750,93 @@ module eviden::events_v3 {
         } else {
             vector::empty<address>()
         }
+    }
+
+    /// Get certificate details
+    #[view]
+    public fun get_certificate_details(certificate_id: u64): (u64, address, String, u64, u8, u64, String) acquires CertificateRegistry {
+        let registry = borrow_global<CertificateRegistry>(@eviden);
+        assert!(table::contains(&registry.certificates, certificate_id), E_EVENT_NOT_FOUND);
+        let cert = table::borrow(&registry.certificates, certificate_id);
+        
+        (
+            cert.event_id,
+            cert.attendee,
+            cert.event_name,
+            cert.validation_score,
+            cert.certificate_tier,
+            cert.issued_at,
+            cert.metadata_uri
+        )
+    }
+
+    /// Get total certificates count
+    #[view]
+    public fun get_total_certificates(): u64 acquires CertificateRegistry {
+        let registry = borrow_global<CertificateRegistry>(@eviden);
+        registry.total_certificates
+    }
+
+    /// Get user's certificates
+    #[view]
+    public fun get_user_certificates(user: address): vector<u64> acquires CertificateRegistry {
+        let registry = borrow_global<CertificateRegistry>(@eviden);
+        
+        if (table::contains(&registry.user_certificates, user)) {
+            *table::borrow(&registry.user_certificates, user)
+        } else {
+            vector::empty<u64>()
+        }
+    }
+
+    /// Get certificates for an event
+    #[view]
+    public fun get_event_certificates(event_id: u64): vector<u64> acquires CertificateRegistry {
+        let registry = borrow_global<CertificateRegistry>(@eviden);
+        
+        if (table::contains(&registry.event_certificates, event_id)) {
+            *table::borrow(&registry.event_certificates, event_id)
+        } else {
+            vector::empty<u64>()
+        }
+    }
+
+    /// Check if user has earned a certificate for an event
+    #[view]
+    public fun can_mint_certificate(event_id: u64, attendee: address): bool acquires AttendanceRegistry {
+        let registry = borrow_global<AttendanceRegistry>(@eviden);
+        
+        // Check if attendee is checked in to this event
+        if (!table::contains(&registry.user_attendances, attendee)) {
+            return false
+        };
+        
+        let user_events = table::borrow(&registry.user_attendances, attendee);
+        if (!vector::contains(user_events, &event_id)) {
+            return false
+        };
+        
+        // Check if certificate already minted
+        if (table::contains(&registry.event_attendee_to_id, event_id)) {
+            let event_attendees = table::borrow(&registry.event_attendee_to_id, event_id);
+            if (table::contains(event_attendees, attendee)) {
+                let attendance_id = *table::borrow(event_attendees, attendee);
+                let attendance = table::borrow(&registry.attendances, attendance_id);
+                if (attendance.certificate_minted) {
+                    return false
+                };
+            };
+        };
+        
+        // Check if enough validations for a certificate
+        let validation_count = get_peer_validation_count(event_id, attendee);
+        validation_count >= BRONZE_MIN_VALIDATIONS
+    }
+
+    /// Get certificate tier that would be earned
+    #[view]
+    public fun get_earned_certificate_tier(event_id: u64, attendee: address): u8 acquires AttendanceRegistry {
+        let validation_count = get_peer_validation_count(event_id, attendee);
+        get_certificate_tier(validation_count)
     }
 }

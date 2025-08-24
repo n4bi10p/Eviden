@@ -5,14 +5,31 @@ import { toast } from 'react-hot-toast';
 import { Mail, X, RefreshCw } from 'lucide-react';
 
 const EmailVerificationBanner: React.FC = () => {
-  const { user } = useWalletAuth();
+  const { user, refreshUser } = useWalletAuth();
   const [isResending, setIsResending] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Show banner if user is logged in and email is NOT verified
   if (!user || user.emailVerified === true || isDismissed) {
     return null;
   }
+
+  // Debug logging
+  console.log('EmailVerificationBanner - User object:', user);
+  console.log('EmailVerificationBanner - emailVerified:', user.emailVerified);
+
+  const handleRefreshStatus = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshUser();
+      toast.success('✅ Verification status refreshed!');
+    } catch (error: any) {
+      toast.error('Failed to refresh verification status');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleResendVerification = async () => {
     setIsResending(true);
@@ -42,6 +59,27 @@ const EmailVerificationBanner: React.FC = () => {
         </div>
         
         <div className="flex items-center space-x-3">
+          <button
+            onClick={handleRefreshStatus}
+            disabled={isRefreshing}
+            className="inline-flex items-center space-x-2 px-3 py-1.5 bg-white/20 hover:bg-white/30 
+                     rounded-lg text-xs font-medium transition-all duration-200 
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Check if email is already verified"
+          >
+            {isRefreshing ? (
+              <>
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                <span>Checking...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-3 h-3" />
+                <span>Check Status</span>
+              </>
+            )}
+          </button>
+          
           <button
             onClick={handleResendVerification}
             disabled={isResending}

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import { useWalletAuth } from '../contexts/WalletAuthContext';
 import GlassCard from '../components/GlassCard';
 import MacOSButton from '../components/MacOSButton';
 
 const VerifyEmailResult: React.FC = () => {
   const { theme } = useTheme();
+  const { refreshUser } = useWalletAuth();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<string>('');
   const [message, setMessage] = useState<string>('');
@@ -16,7 +18,12 @@ const VerifyEmailResult: React.FC = () => {
     
     setStatus(statusParam);
     setMessage(messageParam);
-  }, [searchParams]);
+
+    // If verification was successful, refresh user profile to update emailVerified status
+    if (statusParam === 'success') {
+      refreshUser();
+    }
+  }, [searchParams, refreshUser]);
 
   const getIcon = () => {
     switch (status) {

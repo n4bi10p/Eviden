@@ -52,6 +52,9 @@ const Navbar: React.FC = () => {
                     <Link to="/profile" className="text-macos-gray-700 hover:text-macos-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 text-sm font-medium transition-colors">
                       PROFILE
                     </Link>
+                    <Link to="/attendance" className="text-macos-gray-700 hover:text-macos-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+                      ATTENDANCE
+                    </Link>
                     <Link to="/certificates" className="text-macos-gray-700 hover:text-macos-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 text-sm font-medium transition-colors">
                       CERTIFICATES
                     </Link>
@@ -203,6 +206,13 @@ const Navbar: React.FC = () => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     PROFILE
+                  </Link>
+                  <Link
+                    to="/attendance"
+                    className="text-macos-gray-700 hover:text-macos-gray-900 dark:text-gray-300 dark:hover:text-white block px-3 py-2 text-base font-medium transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    ATTENDANCE
                   </Link>
                   <Link
                     to="/certificates"

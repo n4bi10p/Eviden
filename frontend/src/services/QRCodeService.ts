@@ -1,4 +1,6 @@
 // QR Code Service for Scanning and Generation
+import QRCode from 'qrcode';
+
 export interface QRCodeData {
   eventId: string;
   token: string;
@@ -6,9 +8,19 @@ export interface QRCodeData {
   securityLevel: 'basic' | 'standard' | 'high' | 'maximum';
 }
 
+export interface AttendeeQRData {
+  eventId: string;
+  userId: string;
+  attendeeId: string;
+  email: string;
+  name: string;
+  timestamp: number;
+  type: 'attendee' | 'organizer';
+}
+
 export interface QRScanResult {
   success: boolean;
-  data?: QRCodeData;
+  data?: QRCodeData | AttendeeQRData;
   error?: string;
 }
 
@@ -261,6 +273,58 @@ export class QRCodeService {
       console.error('Failed to capture video frame:', error);
       return null;
     }
+  }
+
+  // ATTENDANCE & CHECK-IN METHODS
+
+  // Generate QR code for event attendee
+  async generateAttendeeQR(
+    eventId: string,
+    userId: string,
+    attendeeData: { email: string; name: string }
+  ): Promise<string> {
+    const qrData: AttendeeQRData = {
+      eventId,
+      userId,
+      attendeeId: `${eventId}_${userId}_${Date.now()}`,
+      email: attendeeData.email,
+      name: attendeeData.name,
+      timestamp: Date.now(),
+      type: 'attendee',
+    };
+
+    try {
+      const qrCodeDataURL = await QRCode.toDataURL(JSON.stringify(qrData), {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#1a1a2e',
+          light: '#ffffff',
+        },
+      });
+      return qrCodeDataURL;
+    } catch (error) {
+      console.error('QR Code generation failed:', error);
+      throw new Error('Failed to generate QR code');
+    }
+  }
+
+  // Parse attendance QR code data
+  parseAttendanceQR(qrString: string): AttendeeQRData {
+    try {
+      const data = JSON.parse(qrString);
+      if (!data.eventId || !data.userId || !data.type) {
+        throw new Error('Invalid QR code format');
+      }
+      return data;
+    } catch (error) {
+      throw new Error('Invalid QR code format');
+    }
+  }
+
+  // Validate QR code for specific event
+  validateQRForEvent(qrData: AttendeeQRData, expectedEventId: string): boolean {
+    return qrData.eventId === expectedEventId && qrData.type === 'attendee';
   }
 }
 

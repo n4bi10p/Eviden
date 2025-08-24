@@ -14,7 +14,7 @@ const router = Router();
 const emailService = new EmailService();
 
 // Verification tokens storage (use database in production)
-const verificationTokens: Map<string, { userId: string, expires: number }> = new Map();
+// const verificationTokens: Map<string, { userId: string, expires: number }> = new Map();
 
 // Mock user storage (replace with database in production)
 interface User {
@@ -33,6 +33,7 @@ interface User {
 
 // Simple file-based storage for development
 const USERS_FILE = path.join(process.cwd(), 'data', 'users.json');
+const VERIFICATION_TOKENS_FILE = path.join(process.cwd(), 'data', 'verification-tokens.json');
 
 // Ensure data directory exists
 const dataDir = path.dirname(USERS_FILE);
@@ -54,6 +55,34 @@ function loadUsers(): Map<string, User> {
   return new Map();
 }
 
+// Load verification tokens from file
+function loadVerificationTokens(): Map<string, { userId: string, expires: number }> {
+  try {
+    if (fs.existsSync(VERIFICATION_TOKENS_FILE)) {
+      const data = fs.readFileSync(VERIFICATION_TOKENS_FILE, 'utf-8');
+      const tokensArray = JSON.parse(data);
+      return new Map(tokensArray);
+    }
+  } catch (error) {
+    console.error('Error loading verification tokens from file:', error);
+  }
+  return new Map();
+}
+
+// Save verification tokens to file
+function saveVerificationTokens(tokens: Map<string, { userId: string, expires: number }>): void {
+  try {
+    const tokensArray = Array.from(tokens.entries());
+    const dataDir = path.dirname(VERIFICATION_TOKENS_FILE);
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    fs.writeFileSync(VERIFICATION_TOKENS_FILE, JSON.stringify(tokensArray, null, 2));
+  } catch (error) {
+    console.error('Error saving verification tokens to file:', error);
+  }
+}
+
 // Save users to file
 function saveUsers(users: Map<string, User>): void {
   try {
@@ -64,8 +93,9 @@ function saveUsers(users: Map<string, User>): void {
   }
 }
 
-// Initialize users from file
+// Initialize users and verification tokens from files
 const users: Map<string, User> = loadUsers();
+const verificationTokens: Map<string, { userId: string, expires: number }> = loadVerificationTokens();
 
 // Helper function to verify signature (simplified for demo)
 const verifySignature = (message: string, signature: string, address: string): boolean => {
@@ -165,6 +195,7 @@ router.post('/register',
       userId: newUser.id,
       expires: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
     });
+    saveVerificationTokens(verificationTokens);
 
     // Send verification email
     try {
@@ -469,6 +500,7 @@ router.post('/resend-verification',
       userId: user.id,
       expires: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
     });
+    saveVerificationTokens(verificationTokens);
 
     // Send verification email
     try {
@@ -522,6 +554,7 @@ router.get('/verify-email',
     // Check if token has expired
     if (Date.now() > tokenData.expires) {
       verificationTokens.delete(token);
+      saveVerificationTokens(verificationTokens);
       return res.redirect(`http://localhost:3000/verify-email-result?status=expired&message=Verification token has expired. Please request a new verification email.`);
     }
 
@@ -545,6 +578,7 @@ router.get('/verify-email',
 
     // Remove used token
     verificationTokens.delete(token);
+    saveVerificationTokens(verificationTokens);
 
     console.log('✅ Email verified successfully for user:', userToVerify.email);
 

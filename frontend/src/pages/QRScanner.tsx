@@ -4,7 +4,7 @@ import { useUser } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import GlassCard from '../components/GlassCard';
-import { qrCodeService, QRCodeData } from '../services/QRCodeService';
+import { qrCodeService, QRCodeData, AttendeeQRData } from '../services/QRCodeService';
 import { apiService } from '../services/ApiService';
 import { locationService } from '../services/LocationService';
 
@@ -109,7 +109,7 @@ const QRScanner: React.FC = () => {
     detectQR();
   };
 
-  const handleQRDetected = async (qrData: QRCodeData | string) => {
+  const handleQRDetected = async (qrData: QRCodeData | AttendeeQRData | string) => {
     setLoading(true);
     stopCamera();
 
@@ -119,36 +119,50 @@ const QRScanner: React.FC = () => {
       if (typeof qrData === 'string') {
         // Parse QR code data if it's a string
         qrInfo = JSON.parse(qrData);
-      } else {
-        // Use QRCodeData object directly
+      } else if ('token' in qrData) {
+        // Handle QRCodeData object
         qrInfo = {
           event_id: qrData.eventId,
           timestamp: Math.floor(qrData.timestamp / 1000), // Convert to seconds
           security_level: qrData.securityLevel,
           token: qrData.token
         };
+      } else {
+        // Handle AttendeeQRData object
+        qrInfo = {
+          event_id: qrData.eventId,
+          attendee_id: qrData.attendeeId,
+          user_id: qrData.userId,
+          email: qrData.email,
+          name: qrData.name,
+          timestamp: Math.floor(qrData.timestamp / 1000), // Convert to seconds
+          type: qrData.type
+        };
       }
       
       // Validate QR code format
-      if (!qrInfo.event_id || !qrInfo.timestamp || !qrInfo.security_level) {
+      if (!qrInfo.event_id || !qrInfo.timestamp) {
         throw new Error('Invalid QR code format');
       }
 
-      // Check if QR code is still valid (time-based)
-      const now = Math.floor(Date.now() / 1000);
-      const qrAge = now - qrInfo.timestamp;
-      
-      const securityLevels: Record<string, number> = {
-        'basic': 24 * 60 * 60, // 24 hours
-        'standard': 5 * 60,    // 5 minutes
-        'high': 60,            // 1 minute
-        'maximum': 30          // 30 seconds
-      };
+      // For event QR codes, check security level and time validity
+      if (qrInfo.security_level) {
+        // Check if QR code is still valid (time-based)
+        const now = Math.floor(Date.now() / 1000);
+        const qrAge = now - qrInfo.timestamp;
+        
+        const securityLevels: Record<string, number> = {
+          'basic': 24 * 60 * 60, // 24 hours
+          'standard': 5 * 60,    // 5 minutes
+          'high': 60,            // 1 minute
+          'maximum': 30          // 30 seconds
+        };
 
-      const maxAge = securityLevels[qrInfo.security_level] || 300;
+        const maxAge = securityLevels[qrInfo.security_level] || 300;
 
-      if (qrAge > maxAge) {
-        throw new Error('QR code has expired');
+        if (qrAge > maxAge) {
+          throw new Error('QR code has expired');
+        }
       }
 
       // Get event details for location verification

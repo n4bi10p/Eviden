@@ -24,13 +24,13 @@ const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({ children }) => {
       {/* Desktop: Sidebar and content side by side with fluid layout */}
       <div className="hidden lg:flex min-h-screen">
         {/* Sidebar - responsive width */}
-        <div className="w-56 xl:w-64 flex-shrink-0">
+        <div className="w-64 xl:w-72 flex-shrink-0">
           <Sidebar />
         </div>
         
         {/* Main Content - fluid width with responsive constraints */}
         <div className="flex-1 min-h-screen overflow-hidden">
-          <main className="h-full px-4 py-4 lg:px-6 lg:py-6 xl:px-8 xl:py-8 overflow-y-auto">
+          <main className="h-full px-6 py-6 lg:px-8 lg:py-8 xl:px-10 xl:py-10 overflow-y-auto">
             <div className="w-full max-w-none xl:max-w-6xl 2xl:max-w-7xl mx-auto">
               {children}
             </div>

@@ -18,6 +18,7 @@ import userRoutes from './routes/users';
 import notificationRoutes from './routes/notifications';
 import uploadRoutes from './routes/uploads';
 import qrCodeRoutes from './routes/qr-codes';
+import attendanceRoutes from './routes/attendance';
 import pushNotificationRoutes from './routes/push-notifications';
 
 // Import services
@@ -182,6 +183,7 @@ class App {
     this.app.use('/api/notifications', notificationRoutes);
     this.app.use('/api/uploads', uploadRoutes);
     this.app.use('/api/qr-codes', qrCodeRoutes);
+    this.app.use('/api/attendance', attendanceRoutes);
     this.app.use('/api/push-notifications', pushNotificationRoutes);
 
     // Serve uploaded files statically

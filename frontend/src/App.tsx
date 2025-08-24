@@ -9,8 +9,10 @@ import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import VerifyEmailResult from './pages/VerifyEmailResult';
+import Dashboard from './pages/Dashboard';
 import EventCreate from './pages/EventCreate';
 import EventCheckin from './pages/EventCheckin';
+import AttendancePage from './pages/AttendancePage';
 import Certificates from './pages/Certificates';
 import Profile from './pages/Profile';
 import Events from './pages/Events';
@@ -45,7 +47,7 @@ const AppRouter: React.FC = () => {
           {/* Protected Routes */}
           <Route path="/dashboard" element={
             <ProtectedRoute>
-              <Events />
+              <Dashboard />
             </ProtectedRoute>
           } />
           
@@ -64,6 +66,12 @@ const AppRouter: React.FC = () => {
           <Route path="/event-checkin/:eventId" element={
             <ProtectedRoute>
               <EventCheckin />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/attendance" element={
+            <ProtectedRoute>
+              <AttendancePage />
             </ProtectedRoute>
           } />
           

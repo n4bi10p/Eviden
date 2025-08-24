@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
-import { useUser } from '../contexts/UserContext';
+import { useWalletAuth } from '../contexts/WalletAuthContext';
 import ThemeToggle from './ThemeToggle';
 
 interface SidebarProps {
@@ -12,7 +12,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const { user, logout } = useUser();
+  const { user, logout } = useWalletAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -34,25 +34,17 @@ const Sidebar: React.FC<SidebarProps> = () => {
   // Base navigation items available to all users
   const baseNavigation = [
     { name: 'Dashboard', href: '/dashboard', icon: '🏠' },
-    { name: 'Profile', href: '/profile', icon: '👤' },
-    { name: 'Settings', href: '/settings', icon: '⚙️' },
-  ];
-
-  // Unified navigation for all users
-  const allNavigation = [
     { name: 'Events', href: '/events', icon: '📅' },
     { name: 'Create Event', href: '/event-create', icon: '➕' },
     { name: 'Certificates', href: '/certificates', icon: '🏆' },
     { name: 'Analytics', href: '/analytics', icon: '📊' },
     { name: 'Components Demo', href: '/demo', icon: '🧩' },
+    { name: 'Profile', href: '/profile', icon: '👤' },
+    { name: 'Settings', href: '/settings', icon: '⚙️' },
   ];
 
-  // Combine navigation
-  const navigation = [
-    ...baseNavigation.slice(0, 1), // Dashboard first
-    ...allNavigation,
-    ...baseNavigation.slice(1), // Profile and Settings at the end
-  ];
+  // All navigation items in the order shown in the screenshot
+  const navigation = baseNavigation;
 
   const handleNavClick = () => {
     if (isMobile) {
@@ -106,15 +98,15 @@ const Sidebar: React.FC<SidebarProps> = () => {
         <div className="flex-1 spacing-responsive-sm overflow-y-auto">
           {/* Logo */}
           <div className="flex items-center space-x-2 mb-4 md:mb-6">
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
               theme === 'dark' 
                 ? 'bg-gradient-to-br from-cyber-purple to-cyber-cyan neon-glow' 
-                : 'bg-macos-blue-gradient shadow-macos'
+                : 'bg-blue-600 shadow-lg'
             }`}>
-              <span className="text-white font-bold text-xs">E</span>
+              <span className="text-white font-bold text-sm">E</span>
             </div>
-            <span className={`text-base md:text-lg font-semibold ${
-              theme === 'dark' ? 'text-white neon-text' : 'text-macos-gray-900'
+            <span className={`text-xl font-bold ${
+              theme === 'dark' ? 'text-white neon-text' : 'text-gray-900'
             }`}>Eviden</span>
           </div>
 
@@ -127,7 +119,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
                 : 'bg-macos-blue/20 text-macos-blue border-macos-blue/50'
               }
             `}>
-              🎫 User
+              🎫 attendee
             </span>
           </div>
 
@@ -188,11 +180,14 @@ const Sidebar: React.FC<SidebarProps> = () => {
               : 'border-white/40 bg-white/20'
           }`}>
             <div className="flex items-center justify-between">
-              <span className={`text-xs md:text-sm font-medium ${
-                theme === 'dark' ? 'text-white/90' : 'text-macos-gray-900'
-              }`}>
-                {theme === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode'}
-              </span>
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">{theme === 'dark' ? '🌙' : '☀️'}</span>
+                <span className={`text-sm font-medium ${
+                  theme === 'dark' ? 'text-white/90' : 'text-gray-900'
+                }`}>
+                  Dark Mode
+                </span>
+              </div>
               <ThemeToggle />
             </div>
           </div>
@@ -200,27 +195,27 @@ const Sidebar: React.FC<SidebarProps> = () => {
 
         {/* Bottom Section - Fixed at bottom */}
         <div className="p-3 md:p-4 border-t border-white/10">
-          <div className={`glass rounded-lg p-2 md:p-3 border ${
+          <div className={`glass rounded-lg p-3 border ${
             theme === 'dark' ? 'border-cyber-purple/40' : 'border-gray-300/40'
           }`}>
-            <div className="flex items-center space-x-2">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs ${
+            <div className="flex items-center space-x-3">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm ${
                 theme === 'dark' 
                   ? 'bg-gradient-to-br from-cyber-purple to-cyber-cyan neon-glow' 
-                  : 'bg-macos-blue-gradient shadow-macos'
+                  : 'bg-blue-600 shadow-lg'
               }`}>
-                {user?.name?.charAt(0).toUpperCase() || 'U'}
+                {user?.full_name?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'A'}
               </div>
               <div className="min-w-0 flex-1">
-                <p className={`text-xs font-medium truncate ${
-                  theme === 'dark' ? 'text-white' : 'text-macos-gray-900'
+                <p className={`text-sm font-medium truncate ${
+                  theme === 'dark' ? 'text-white' : 'text-gray-900'
                 }`}>
-                  {user?.name || 'User'}
+                  {user?.role || 'attendee'}
                 </p>
                 <p className={`text-xs truncate ${
-                  theme === 'dark' ? 'text-cyber-cyan/70' : 'text-macos-gray-700'
+                  theme === 'dark' ? 'text-cyber-cyan/70' : 'text-gray-600'
                 }`}>
-                  {user?.email || 'user@example.com'}
+                  {user?.email || 'user@demo.com'}
                 </p>
               </div>
             </div>

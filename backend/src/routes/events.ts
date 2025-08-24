@@ -35,6 +35,84 @@ const events: Map<string, Event> = new Map();
 const attendees: Map<string, Set<string>> = new Map(); // eventId -> Set of user addresses
 const checkIns: Map<string, Map<string, { timestamp: number; latitude: number; longitude: number }>> = new Map();
 
+// Initialize with sample events
+const initializeSampleEvents = () => {
+  const now = Math.floor(Date.now() / 1000);
+  const oneDay = 24 * 60 * 60;
+  const oneWeek = 7 * oneDay;
+
+  const sampleEvents: Event[] = [
+    {
+      id: 'event_1',
+      name: 'Blockchain Security Conference 2025',
+      description: 'Join leading experts in comprehensive blockchain security discussions and workshops.',
+      organizer: 'Alex Chen',
+      start_time: now + oneDay,
+      end_time: now + oneDay + (6 * 60 * 60), // 6 hours later
+      venue_name: 'Tech Center Mumbai',
+      venue_address: 'Bandra Kurla Complex, Mumbai',
+      latitude: 19.0760,
+      longitude: 72.8777,
+      max_attendees: 150,
+      check_in_radius: 100,
+      image_url: '',
+      external_url: '',
+      created_at: now - oneWeek,
+      is_active: true,
+      tags: ['blockchain', 'security', 'conference']
+    },
+    {
+      id: 'event_2',
+      name: 'DeFi Innovation Summit',
+      description: 'Explore the latest innovations in decentralized finance and network with industry leaders.',
+      organizer: 'Sarah Rodriguez',
+      start_time: now + (2 * oneDay),
+      end_time: now + (2 * oneDay) + (8 * 60 * 60), // 8 hours later
+      venue_name: 'Innovation Hub Delhi',
+      venue_address: 'Connaught Place, New Delhi',
+      latitude: 28.6139,
+      longitude: 77.2090,
+      max_attendees: 200,
+      check_in_radius: 100,
+      image_url: '',
+      external_url: '',
+      created_at: now - oneWeek,
+      is_active: true,
+      tags: ['defi', 'finance', 'innovation']
+    },
+    {
+      id: 'event_3',
+      name: 'Web3 Development Workshop',
+      description: 'Hands-on workshop for building Web3 applications with modern frameworks.',
+      organizer: 'Marcus Thompson',
+      start_time: now + (3 * oneDay),
+      end_time: now + (3 * oneDay) + (4 * 60 * 60), // 4 hours later
+      venue_name: 'DevSpace Bangalore',
+      venue_address: 'Koramangala, Bangalore',
+      latitude: 12.9279,
+      longitude: 77.6271,
+      max_attendees: 100,
+      check_in_radius: 100,
+      image_url: '',
+      external_url: '',
+      created_at: now - oneWeek,
+      is_active: true,
+      tags: ['web3', 'development', 'workshop']
+    }
+  ];
+
+  sampleEvents.forEach(event => {
+    events.set(event.id, event);
+    attendees.set(event.id, new Set());
+    checkIns.set(event.id, new Map());
+  });
+
+  console.log(`✅ Initialized ${sampleEvents.length} sample events`);
+};
+
+// Initialize sample events on startup
+initializeSampleEvents();
+
 /**
  * @route POST /api/events
  * @desc Create a new event
@@ -62,7 +140,7 @@ router.post('/',
       const event: Event = {
         id: eventId,
         ...eventData,
-        organizer: user.address,
+        organizer: user.name || user.address, // Use user name if available, fallback to address
         created_at: Math.floor(Date.now() / 1000),
         is_active: true
       };
@@ -115,6 +193,21 @@ router.get('/',
 
     let filteredEvents = Array.from(events.values());
 
+    // Filter out events with invalid timestamps (too far in the future)
+    const maxValidYear = 2030;
+    const maxValidTimestamp = new Date(`${maxValidYear}-12-31`).getTime() / 1000;
+    console.log('🔍 Filtering events. Max valid timestamp:', maxValidTimestamp);
+    
+    filteredEvents = filteredEvents.filter(event => {
+      const isValid = event.start_time < maxValidTimestamp && event.end_time < maxValidTimestamp;
+      if (!isValid) {
+        console.log(`🚫 Filtering out event ${event.id} with start_time: ${event.start_time}, end_time: ${event.end_time}`);
+      }
+      return isValid;
+    });
+    
+    console.log(`✅ Filtered to ${filteredEvents.length} valid events`);
+
     // Apply filters
     if (search) {
       const searchLower = search.toLowerCase();
@@ -159,12 +252,35 @@ router.get('/',
     const offset = (page - 1) * limit;
     const paginatedEvents = filteredEvents.slice(offset, offset + limit);
 
-    // Add attendee counts
-    const eventsWithCounts = paginatedEvents.map(event => ({
-      ...event,
-      attendee_count: attendees.get(event.id)?.size || 0,
-      checked_in_count: checkIns.get(event.id)?.size || 0
-    }));
+    // Add attendee counts and transform for frontend
+    const eventsWithCounts = paginatedEvents.map(event => {
+      const now = Math.floor(Date.now() / 1000);
+      let status = 'upcoming';
+      if (event.start_time <= now && event.end_time > now) {
+        status = 'ongoing';
+      } else if (event.end_time <= now) {
+        status = 'completed';
+      }
+
+      return {
+        id: event.id,
+        title: event.name,
+        description: event.description,
+        organizer: event.organizer,
+        date: new Date(event.start_time * 1000).toLocaleDateString(),
+        time: new Date(event.start_time * 1000).toLocaleTimeString(),
+        location: event.venue_name,
+        price: 'Free', // Default to free for now
+        status: status,
+        image: '🎉', // Default emoji icon
+        category: 'General',
+        max_attendees: event.max_attendees,
+        current_attendees: attendees.get(event.id)?.size || 0,
+        created_at: new Date(event.created_at * 1000).toISOString(),
+        attendee_count: attendees.get(event.id)?.size || 0,
+        checked_in_count: checkIns.get(event.id)?.size || 0
+      };
+    });
 
     res.json({
       success: true,

@@ -4,7 +4,7 @@ import { validate } from '../middleware/validation';
 import { userSchemas } from '../middleware/validation';
 import { authRateLimit } from '../middleware/rateLimit';
 import { asyncHandler } from '../middleware/errorHandler';
-import { AuthenticationError, ValidationError, ConflictError } from '../middleware/errorHandler';
+import { AuthenticationError, ValidationError, ConflictError, NotFoundError } from '../middleware/errorHandler';
 import { EmailService } from '../services/EmailService';
 import crypto from 'crypto';
 import fs from 'fs';
@@ -211,6 +211,7 @@ router.post('/register',
       id: newUser.id,
       address: newUser.address,
       email: newUser.email,
+      name: newUser.name,
       role: newUser.role
     });
 
@@ -275,6 +276,7 @@ router.post('/login',
       id: user.id,
       address: user.address,
       email: user.email,
+      name: user.name,
       role: user.role
     });
 
@@ -311,12 +313,21 @@ router.post('/refresh',
   asyncHandler(async (req: Request, res: Response) => {
     const user = req.user!;
 
+    // Get complete user data from storage
+    const users = loadUsers();
+    const userData = users.get(user.address);
+    
+    if (!userData) {
+      throw new NotFoundError('User');
+    }
+
     // Generate new token
     const token = generateToken({
-      id: user.id,
-      address: user.address,
-      email: user.email,
-      role: user.role
+      id: userData.id,
+      address: userData.address,
+      email: userData.email,
+      name: userData.name,
+      role: userData.role
     }, '1h');
 
     res.json({

@@ -273,7 +273,7 @@ export default function UserProfile() {
               <div className="p-3 bg-white/5 rounded-xl border border-white/10">
                 <p className="text-white/60 text-sm mb-1">Address</p>
                 <p className="text-white font-mono text-sm break-all">
-                  {walletAddress || 'No wallet address available'}
+                  {walletAddress || user?.address || 'No wallet address available'}
                 </p>
               </div>
             </div>

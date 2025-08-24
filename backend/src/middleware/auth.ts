@@ -10,6 +10,7 @@ declare global {
         id: string;
         address: string;
         email?: string;
+        name?: string;
         role: string;
       };
     }
@@ -21,6 +22,7 @@ export interface AuthRequest extends Request {
     id: string;
     address: string;
     email?: string;
+    name?: string;
     role: string;
   };
 }

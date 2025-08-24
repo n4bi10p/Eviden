@@ -9,10 +9,10 @@
       "role": "organizer",
       "organizationName": "Rootables",
       "organizationDescription": "bbggf",
-      "isVerified": false,
-      "emailVerified": false,
+      "isVerified": true,
+      "emailVerified": true,
       "created_at": 1756003218,
-      "last_login": 1756018347
+      "last_login": 1756021954
     }
   ]
 ]

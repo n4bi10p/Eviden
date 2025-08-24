@@ -15,10 +15,19 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   redirectTo = '/',
   allowedRoles
 }) => {
-  const { user, isConnected } = useWalletAuth();
+  const { user, isLoading } = useWalletAuth();
+
+  // Show loading while authentication state is being determined
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   // If authentication is required and user is not logged in, redirect
-  if (requireAuth && (!isConnected || !user)) {
+  if (requireAuth && !user) {
     return <Navigate to={redirectTo} replace />;
   }
 

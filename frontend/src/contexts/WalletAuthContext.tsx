@@ -511,6 +511,7 @@ export function WalletAuthProvider({ children }: WalletAuthProviderProps) {
             
             if (user) {
               setUser(user);
+              setIsConnected(true); // Set connected state during session restoration
               console.log('✅ Session restored successfully:', user);
             } else {
               throw new Error('Invalid user data in response');

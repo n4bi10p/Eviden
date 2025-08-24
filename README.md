@@ -327,7 +327,9 @@ aptos move test
 - API Documentation: http://localhost:3001/api-docs
 
 
-6. **Transaction hash - 0x32b49fa469f98dea3b1929c35f66b2f12e7b6a76ce83105fb46b69f4b0f3a26a**
+6. **Transaction hash** - `0x32b49fa469f98dea3b1929c35f66b2f12e7b6a76ce83105fb46b69f4b0f3a26a`
+7. <img width="1683" height="1038" alt="image" src="https://github.com/user-attachments/assets/8f93f19b-8538-4b7a-a670-851f00b98597" />
+
 
 
 ---
@@ -420,16 +422,14 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 ## 📞 **Contact & Support**
 
-- 🌐 **Website**: [Coming Soon]
-- 📧 **Email**: [Your Email]
-- 🐦 **Twitter**: [Your Twitter]
-- 💬 **Discord**: [Your Discord Server]
+- 📧 **Email**: [n4bi10p@gmail.com]
+
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by the Eviden Team**
+**Built with ❤️ by the Rootables Team**
 
 *Revolutionizing Event Attendance with Blockchain Technology*
 

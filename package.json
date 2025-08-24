@@ -1,4 +1,18 @@
 {
+  "name": "eviden",
+  "version": "1.0.0",
+  "description": "Blockchain-based event attendance verification platform with NFT certificates",
+  "license": "MIT",
+  "author": "Eviden Team",
+  "keywords": [
+    "blockchain",
+    "attendance",
+    "aptos",
+    "nft",
+    "certificates",
+    "peer-validation",
+    "web3"
+  ],
   "dependencies": {
     "@types/qrcode": "^1.5.5",
     "qrcode": "^1.5.4",

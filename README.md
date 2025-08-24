@@ -153,7 +153,6 @@ Aptos Blockchain + Move Language
 
 ### **💰 Monetization Features**
 - 💳 **Event Ticketing**: Paid event support with crypto payments
-- 🎁 **NFT Marketplace**: Trade and sell event certificates
 - 💎 **Premium Features**: Advanced organizer tools
 - 🏆 **Rewards System**: Token rewards for active participants
 

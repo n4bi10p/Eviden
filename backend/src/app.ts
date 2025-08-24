@@ -115,9 +115,22 @@ class App {
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     }));
 
-    // Request logging
+    // Request logging (skip repetitive GET requests to reduce spam)
     if (config.NODE_ENV === 'development') {
-      this.app.use(morgan('dev'));
+      // Custom format that skips repetitive GET requests
+      this.app.use(morgan('dev', {
+        skip: (req, res) => {
+          // Skip logging repetitive API calls that return 304 (Not Modified)
+          if (req.method === 'GET' && res.statusCode === 304) {
+            return true;
+          }
+          // Skip logging repetitive events API calls
+          if (req.url.includes('/api/events') && req.method === 'GET') {
+            return true;
+          }
+          return false;
+        }
+      }));
     } else {
       this.app.use(morgan('combined'));
     }

@@ -1,42 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { apiService } from '../services/ApiService';
+import { useSearchParams } from 'react-router-dom';
 import GlassCard from '../components/GlassCard';
 import Button from '../components/Button';
 
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const verifyEmail = async () => {
-      const token = searchParams.get('token');
-      
-      if (!token) {
-        setStatus('error');
-        setMessage('Invalid verification link. Please check your email for the correct link.');
-        return;
-      }
+    // Since we now use redirect-based verification,
+    // this component should redirect to the verification result page
+    const token = searchParams.get('token');
+    
+    if (!token) {
+      setStatus('error');
+      setMessage('Invalid verification link. Please check your email for the correct link.');
+      return;
+    }
 
-      try {
-        const response = await apiService.verifyEmail(token);
-        setStatus('success');
-        setMessage(response.message || 'Email verified successfully!');
-        
-        // Auto redirect to dashboard after 3 seconds
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 3000);
-      } catch (error: any) {
-        setStatus('error');
-        setMessage(error.message || 'Verification failed. Please try again.');
-      }
-    };
-
-    verifyEmail();
-  }, [searchParams, navigate]);
+    // Redirect to backend verification endpoint
+    window.location.href = `http://localhost:5000/api/auth/verify-email?token=${token}`;
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4">
@@ -72,7 +57,7 @@ const VerifyEmail: React.FC = () => {
               Redirecting to dashboard in 3 seconds...
             </p>
             <Button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => window.location.href = '/dashboard'}
               className="mt-4"
             >
               Go to Dashboard Now
@@ -95,7 +80,7 @@ const VerifyEmail: React.FC = () => {
             </p>
             <div className="space-y-3">
               <Button
-                onClick={() => navigate('/auth')}
+                onClick={() => window.location.href = '/auth'}
                 className="w-full"
               >
                 Back to Login

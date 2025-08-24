@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useGlobalStats, useEvents } from '../hooks/useApi';
 import StatCard from './ui/StatCard';
@@ -21,11 +21,14 @@ export function LiveAnalyticsDashboard() {
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState('overview');
   
+  // Memoize the params to prevent infinite re-renders
+  const eventsParams = useMemo(() => ({
+    organizer: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // Mock organizer for demo
+  }), []);
+  
   // Fetch real-time data
   const { data: globalStats, loading: statsLoading, refetch: refetchStats } = useGlobalStats();
-  const { data: eventsData, loading: eventsLoading, refetch: refetchEvents } = useEvents({
-    organizer: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // Mock organizer for demo
-  });
+  const { data: eventsData, loading: eventsLoading, refetch: refetchEvents } = useEvents(eventsParams);
 
   // Refresh data every 30 seconds
   useEffect(() => {

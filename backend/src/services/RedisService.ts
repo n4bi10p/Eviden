@@ -85,7 +85,10 @@ export class RedisService {
     try {
       return await this.client.get(key);
     } catch (error) {
-      console.error(`Redis GET error for key ${key}:`, error);
+      // Only log errors if Redis is supposed to be enabled
+      if (process.env.REQUIRE_REDIS === 'true') {
+        console.error(`Redis GET error for key ${key}:`, error);
+      }
       return null;
     }
   }
@@ -109,7 +112,10 @@ export class RedisService {
       await this.client.setEx(key, seconds, value);
       return true;
     } catch (error) {
-      console.error(`Redis SETEX error for key ${key}:`, error);
+      // Only log errors if Redis is supposed to be enabled
+      if (process.env.REQUIRE_REDIS === 'true') {
+        console.error(`Redis SETEX error for key ${key}:`, error);
+      }
       return false;
     }
   }

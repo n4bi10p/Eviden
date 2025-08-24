@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useEvents, useCreateEvent } from '../hooks/useApi';
 import { Form, FormField, TextareaField, SelectField, SubmitButton, createValidationSchemas } from './ui/Form';
@@ -25,13 +25,16 @@ export function EventManagement() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  // API hooks
-  const { data: eventsData, loading: eventsLoading, refetch: refetchEvents } = useEvents({
+  // Memoize the params to prevent infinite re-renders
+  const eventsParams = useMemo(() => ({
     organizer: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // Mock organizer for demo
     ...(searchTerm && { search: searchTerm }),
     ...(categoryFilter && { category: categoryFilter }),
     ...(statusFilter && { status: statusFilter as any }),
-  });
+  }), [searchTerm, categoryFilter, statusFilter]);
+
+  // API hooks
+  const { data: eventsData, loading: eventsLoading, refetch: refetchEvents } = useEvents(eventsParams);
 
   const { createEvent, loading: createLoading } = useCreateEvent();
 

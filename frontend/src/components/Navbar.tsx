@@ -10,7 +10,7 @@ const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const { user, isConnected, logout, disconnectWallet, walletAddress, walletType } = useWalletAuth();
+  const { user, logout } = useWalletAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);

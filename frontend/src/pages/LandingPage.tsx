@@ -134,7 +134,7 @@ const LandingPage: React.FC = () => {
                         ? 'bg-gradient-to-br from-purple-500 to-blue-500' 
                         : 'bg-gradient-to-br from-blue-500 to-purple-500'
                     }`}>
-                      {user.name?.charAt(0).toUpperCase() || 'U'}
+                      {user.full_name?.charAt(0).toUpperCase() || user.username?.charAt(0).toUpperCase() || 'U'}
                     </div>
                   </Link>
                 </div>

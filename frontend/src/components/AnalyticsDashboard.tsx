@@ -5,7 +5,6 @@ import MacOSButton from './MacOSButton';
 import { 
   StatCard, 
   Chart, 
-  ProgressBar, 
   Tabs, 
   TopPerformingList 
 } from './ui';
@@ -145,76 +144,6 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
-
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US').format(num);
-  };
-
-  const getGrowthPercentage = (current: number, previous: number) => {
-    if (previous === 0) return 0;
-    return Math.round(((current - previous) / previous) * 100);
-  };
-
-  const MetricCard = ({ 
-    title, 
-    value, 
-    change, 
-    icon, 
-    color = 'blue' 
-  }: {
-    title: string;
-    value: string;
-    change?: number;
-    icon: string;
-    color?: 'blue' | 'green' | 'purple' | 'orange';
-  }) => {
-    const colorClasses = {
-      blue: 'from-blue-500 to-cyan-500',
-      green: 'from-green-500 to-emerald-500',
-      purple: 'from-purple-500 to-pink-500',
-      orange: 'from-orange-500 to-red-500'
-    };
-
-    return (
-      <GlassCard className="p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className={`text-sm font-medium ${
-              theme === 'dark' ? 'text-white/70' : 'text-slate-600'
-            }`}>
-              {title}
-            </p>
-            <p className={`text-2xl font-bold mt-1 ${
-              theme === 'dark' ? 'text-white' : 'text-slate-800'
-            }`}>
-              {value}
-            </p>
-            {change !== undefined && (
-              <p className={`text-sm mt-1 flex items-center ${
-                change >= 0 ? 'text-green-500' : 'text-red-500'
-              }`}>
-                <span className="mr-1">
-                  {change >= 0 ? '↗️' : '↘️'}
-                </span>
-                {Math.abs(change)}% from last month
-              </p>
-            )}
-          </div>
-          <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${colorClasses[color]} flex items-center justify-center text-white text-xl`}>
-            {icon}
-          </div>
-        </div>
-      </GlassCard>
-    );
-  };
-
   const ProgressBar = ({ 
     label, 
     percentage, 
@@ -250,39 +179,6 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             className={`h-full rounded-full ${colorClass} transition-all duration-500`}
             style={{ width: `${percentage}%` }}
           />
-        </div>
-      </div>
-    );
-  };
-
-  const SimpleChart = ({ 
-    data
-  }: {
-    data: Array<{ label: string; value: number }>;
-    type?: 'line' | 'bar';
-    color?: string;
-  }) => {
-    const maxValue = Math.max(...data.map(d => d.value));
-    
-    return (
-      <div className="space-y-4">
-        <div className="flex items-end justify-between h-32 space-x-2">
-          {data.map((item, index) => (
-            <div key={index} className="flex-1 flex flex-col items-center">
-              <div 
-                className={`w-full rounded-t-lg bg-gradient-to-t from-blue-500 to-cyan-400 transition-all duration-500`}
-                style={{ 
-                  height: `${(item.value / maxValue) * 100}%`,
-                  minHeight: '4px'
-                }}
-              />
-              <span className={`text-xs mt-2 ${
-                theme === 'dark' ? 'text-white/60' : 'text-slate-600'
-              }`}>
-                {item.label}
-              </span>
-            </div>
-          ))}
         </div>
       </div>
     );
@@ -439,13 +335,12 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               <ProgressBar
                 key={index}
                 label={group.group}
-                value={group.percentage}
-                showPercentage={true}
+                percentage={group.percentage}
                 color={
-                  index === 0 ? 'bg-blue-500' :
-                  index === 1 ? 'bg-green-500' :
-                  index === 2 ? 'bg-purple-500' :
-                  'bg-orange-500'
+                  index === 0 ? 'blue' :
+                  index === 1 ? 'green' :
+                  index === 2 ? 'purple' :
+                  'orange'
                 }
               />
             ))}
@@ -465,13 +360,12 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               <ProgressBar
                 key={index}
                 label={location.location}
-                value={location.percentage}
-                showPercentage={true}
+                percentage={location.percentage}
                 color={
-                  index === 0 ? 'bg-green-500' :
-                  index === 1 ? 'bg-blue-500' :
-                  index === 2 ? 'bg-purple-500' :
-                  'bg-yellow-500'
+                  index === 0 ? 'green' :
+                  index === 1 ? 'blue' :
+                  index === 2 ? 'purple' :
+                  'orange'
                 }
               />
             ))}
@@ -491,13 +385,12 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               <ProgressBar
                 key={index}
                 label={interest.interest}
-                value={interest.percentage}
-                showPercentage={true}
+                percentage={interest.percentage}
                 color={
-                  index === 0 ? 'bg-orange-500' :
-                  index === 1 ? 'bg-purple-500' :
-                  index === 2 ? 'bg-blue-500' :
-                  'bg-green-500'
+                  index === 0 ? 'orange' :
+                  index === 1 ? 'purple' :
+                  index === 2 ? 'blue' :
+                  'green'
                 }
               />
             ))}

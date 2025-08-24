@@ -29,6 +29,11 @@ class RateLimiter {
 
   middleware = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      // Skip rate limiting if Redis is not connected
+      if (!this.redis.isClientConnected()) {
+        return next();
+      }
+
       const key = `rate_limit:${this.options.keyGenerator!(req)}`;
       const current = await this.redis.get(key);
       const currentCount = current ? parseInt(current) : 0;
@@ -51,7 +56,9 @@ class RateLimiter {
 
       // Increment counter
       const newCount = currentCount + 1;
-      await this.redis.setex(key, Math.ceil(this.options.windowMs / 1000), newCount.toString());
+      if (this.redis.isClientConnected()) {
+        await this.redis.setex(key, Math.ceil(this.options.windowMs / 1000), newCount.toString());
+      }
 
       if (this.options.headers) {
         res.set({

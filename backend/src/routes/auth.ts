@@ -221,6 +221,8 @@ router.post('/login',
           role: user.role,
           organizationName: user.organizationName,
           organizationDescription: user.organizationDescription,
+          emailVerified: user.emailVerified || false,
+          isVerified: user.isVerified || false,
           last_login: user.last_login
         },
         token,

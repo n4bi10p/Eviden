@@ -343,7 +343,12 @@ export function WalletAuthProvider({ children }: WalletAuthProviderProps) {
       // Store token in localStorage for persistence
       localStorage.setItem('authToken', token);
       
-      toast.success('Login successful!');
+      // Check if user needs email verification
+      if (!user.emailVerified) {
+        toast.error('Please verify your email address to access all features. Check your inbox!');
+      } else {
+        toast.success('Login successful!');
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
       setError(errorMessage);

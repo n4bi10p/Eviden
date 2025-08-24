@@ -92,7 +92,7 @@ const Settings: React.FC = () => {
               </label>
               <input
                 type="text"
-                defaultValue={user?.name}
+                defaultValue={user?.full_name || user?.username}
                 className={`w-full px-4 py-3 rounded-xl border transition-all ${
                   theme === 'dark' 
                     ? 'bg-white/10 border-white/20 text-white/80 placeholder-white/40 focus:border-blue-500'

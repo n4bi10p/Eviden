@@ -38,7 +38,7 @@ const GlassCard: React.FC<GlassCardProps> = ({
     ${theme === 'dark' ? 'focus:ring-cyber-cyan/50' : 'focus:ring-blue-500/50'}
   ` : '';
 
-  const Component = (interactive || onClick) ? 'button' : 'div';
+  const Component = 'div'; // Always render as div to avoid nested button issues
 
   return (
     <Component 
@@ -55,8 +55,14 @@ const GlassCard: React.FC<GlassCardProps> = ({
         ${className}
       `}
       onClick={onClick}
-      role={interactive ? 'button' : undefined}
-      tabIndex={interactive ? 0 : undefined}
+      onKeyDown={onClick ? (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      } : undefined}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick || interactive ? 0 : undefined}
     >
       {children}
     </Component>

@@ -141,12 +141,12 @@ const LandingPage: React.FC = () => {
               ) : (
                 <>
                   <Link to="/login">
-                    <MacOSButton variant="secondary" size="sm">
+                    <MacOSButton size="sm" className="min-w-[110px] px-6 py-2">
                       Login
                     </MacOSButton>
                   </Link>
                   <Link to="/signup">
-                    <MacOSButton size="sm" icon="✨">
+                    <MacOSButton size="sm" className="min-w-[110px] px-6 py-2">
                       Sign Up
                     </MacOSButton>
                   </Link>

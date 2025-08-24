@@ -97,7 +97,12 @@ curl -H "Authorization: Bearer <jwt_token>" \
 
 ### Users
 - Alice Johnson (`alice_crypto`) - Organizer with 5 events created
-- Address: `0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef`
+- Address: `alice.johnson@eviden.com`
+
+### Events
+- Blockchain Security Summit 2025 - Organized by Alex Chen
+- DeFi Innovation Conference - Organized by Sarah Rodriguez  
+- Web3 Developer Bootcamp - Organized by Marcus Thompson
 
 ### Notifications
 - Certificate earned notification
@@ -113,10 +118,10 @@ curl http://localhost:3001/health
 curl http://localhost:3001/api
 
 # Test nonce generation
-curl http://localhost:3001/api/auth/nonce/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+curl http://localhost:3001/api/auth/nonce/alice.johnson@eviden.com
 
 # Test user profile
-curl http://localhost:3001/api/users/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+curl http://localhost:3001/api/users/alice.johnson@eviden.com
 
 # Test global stats
 curl http://localhost:3001/api/users/stats/global

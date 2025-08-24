@@ -59,20 +59,88 @@ export function WalletAuthProvider({ children }: WalletAuthProviderProps) {
 
   const walletService = WalletService.getInstance();
 
-  // Detect wallet type
+  // Detect wallet type by checking which one is actually connected
+  const detectConnectedWalletType = async (): Promise<'petra' | 'martian' | 'pontem' | null> => {
+    if (typeof window === 'undefined') return null;
+    
+    try {
+      // Check if Petra is connected
+      // @ts-ignore
+      if (window.aptos?.isPetra) {
+        try {
+          // @ts-ignore
+          const account = await window.aptos.account();
+          if (account?.address) {
+            return 'petra';
+          }
+        } catch (error) {
+          // Not connected to Petra
+        }
+      }
+      
+      // Check if Martian is connected
+      // @ts-ignore
+      if (window.martian) {
+        try {
+          // @ts-ignore
+          const account = await window.martian.account();
+          if (account?.address) {
+            return 'martian';
+          }
+        } catch (error) {
+          // Not connected to Martian
+        }
+      }
+      
+      // Check if Pontem is connected
+      // @ts-ignore
+      if (window.pontem) {
+        try {
+          // @ts-ignore
+          const account = await window.pontem.account();
+          if (account?.address) {
+            return 'pontem';
+          }
+        } catch (error) {
+          // Not connected to Pontem
+        }
+      }
+      
+      // Fallback: Check generic aptos object (might be Petra)
+      // @ts-ignore
+      if (window.aptos && !window.pontem && !window.martian) {
+        try {
+          // @ts-ignore
+          const account = await window.aptos.account();
+          if (account?.address) {
+            return 'petra';
+          }
+        } catch (error) {
+          // Not connected
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error detecting connected wallet:', error);
+    }
+    
+    return null;
+  };
+
+  // Detect wallet type for installation check only
   const detectWalletType = (): 'petra' | 'martian' | 'pontem' | null => {
     if (typeof window !== 'undefined') {
-      // Check Pontem first (most specific)
-      // @ts-ignore
-      if (window.pontem) return 'pontem';
-      // Check Martian
-      // @ts-ignore
-      if (window.martian) return 'martian';
-      // Check Petra (multiple ways)
+      // Check Petra first (most common)
       // @ts-ignore
       if (window.aptos?.isPetra) return 'petra';
       // @ts-ignore
       if (window.petra) return 'petra';
+      // Check Martian
+      // @ts-ignore
+      if (window.martian) return 'martian';
+      // Check Pontem
+      // @ts-ignore
+      if (window.pontem) return 'pontem';
       // @ts-ignore
       // If only aptos exists and no other wallets, assume Petra
       if (window.aptos && !window.pontem && !window.martian) return 'petra';
@@ -114,29 +182,43 @@ export function WalletAuthProvider({ children }: WalletAuthProviderProps) {
     const checkWalletConnection = async () => {
       try {
         setIsLoading(true);
-        const detectedWalletType = detectWalletType();
-        setWalletType(detectedWalletType);
+        
+        // First, check which wallet is actually connected
+        const connectedWalletType = await detectConnectedWalletType();
+        console.log('🔍 Connected wallet type detected:', connectedWalletType);
+        
+        if (connectedWalletType) {
+          setWalletType(connectedWalletType);
+          console.log('✅ Setting wallet type to:', connectedWalletType);
+          
+          // Get the provider and account details
+          const walletProvider = getWalletProvider(connectedWalletType);
+          if (walletProvider) {
+            try {
+              const account = await walletProvider.account();
+              console.log('📱 Account details:', account);
+              if (account?.address) {
+                setWalletAddress(account.address);
+                setIsConnected(true);
+                console.log('🔗 Wallet connected with address:', account.address);
 
-        // Check if wallet is connected using the correct provider
-        const walletProvider = getWalletProvider(detectedWalletType);
-        if (walletProvider) {
-          try {
-            const account = await walletProvider.account();
-            if (account?.address) {
-              setWalletAddress(account.address);
-              setIsConnected(true);
-
-              // Check if user is logged in
-              const token = localStorage.getItem('authToken');
-              if (token) {
-                apiService.setToken(token);
-                await refreshUserProfile();
+                // Check if user is logged in
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                  apiService.setToken(token);
+                  await refreshUserProfile();
+                }
               }
+            } catch (err) {
+              // Wallet not connected or no permission
+              console.log('❌ Wallet not connected:', err);
             }
-          } catch (err) {
-            // Wallet not connected or no permission
-            console.log('Wallet not connected');
           }
+        } else {
+          // No wallet connected, but detect available wallets
+          const availableWalletType = detectWalletType();
+          console.log('📋 Available wallet type:', availableWalletType);
+          setWalletType(availableWalletType);
         }
       } catch (error) {
         console.error('Failed to check wallet connection:', error);

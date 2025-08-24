@@ -4,7 +4,7 @@
 # Tests all API endpoints to ensure they're working correctly
 
 BASE_URL="http://localhost:5000"
-TEST_ADDRESS="0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+TEST_ADDRESS="alice.johnson@eviden.com"
 
 echo "🧪 Starting Attestify API Test Suite"
 echo "=================================="

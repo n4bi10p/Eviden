@@ -42,6 +42,7 @@ const Dashboard: React.FC = () => {
     verificationRate: 0
   });
   const [loadingStats, setLoadingStats] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -66,12 +67,30 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  // Show error if there was a critical error (though we have fallback data)
+  if (error && !events.length && !loadingStats) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg text-red-500">⚠️ {error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Fetch dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
       const apiService = new ApiService();
       try {
         setLoadingStats(true);
+        setError(null);
 
         // Fetch events
         const eventsResponse = await apiService.getEvents({ limit: 6, status: 'upcoming' });
@@ -79,13 +98,21 @@ const Dashboard: React.FC = () => {
           setEvents(eventsResponse.data.events || []);
         }
 
-        // Fetch analytics/stats (we'll create this endpoint or use existing ones)
+        // Fetch analytics/stats
         try {
           const statsResponse = await apiService.getDashboardStats();
-          if (statsResponse.success) {
-            setStats(statsResponse.data);
+          if (statsResponse.success && statsResponse.data) {
+            setStats({
+              totalEvents: statsResponse.data.totalEvents || 0,
+              totalAttendees: statsResponse.data.totalAttendees || 0,
+              citiesWorldwide: statsResponse.data.citiesWorldwide || 0,
+              verificationRate: statsResponse.data.verificationRate || 0
+            });
+          } else {
+            throw new Error('Invalid stats response');
           }
         } catch (statsError) {
+          console.warn('Stats endpoint error, using fallback data:', statsError);
           // Fallback to mock data if stats endpoint doesn't exist
           setStats({
             totalEvents: 12,
@@ -97,6 +124,7 @@ const Dashboard: React.FC = () => {
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        setError('Failed to load dashboard data');
         // Fallback to mock data
         setEvents([]);
         setStats({
@@ -115,12 +143,12 @@ const Dashboard: React.FC = () => {
     }
   }, [user]);
 
-  // Statistics display data
+  // Statistics display data with safety checks
   const statsDisplay = [
-    { id: 1, title: 'Upcoming Events', value: stats.totalEvents.toString(), icon: '📅', color: 'blue' },
-    { id: 2, title: 'Total Attendees', value: stats.totalAttendees > 1000 ? `${(stats.totalAttendees/1000).toFixed(1)}K` : stats.totalAttendees.toString(), icon: '👥', color: 'green' },
-    { id: 3, title: 'Cities Worldwide', value: stats.citiesWorldwide.toString(), icon: '🌍', color: 'purple' },
-    { id: 4, title: 'Verification Rate', value: `${stats.verificationRate}%`, icon: '✅', color: 'cyan' }
+    { id: 1, title: 'Upcoming Events', value: (stats?.totalEvents || 0).toString(), icon: '📅', color: 'blue' },
+    { id: 2, title: 'Total Attendees', value: (stats?.totalAttendees || 0) > 1000 ? `${((stats?.totalAttendees || 0)/1000).toFixed(1)}K` : (stats?.totalAttendees || 0).toString(), icon: '👥', color: 'green' },
+    { id: 3, title: 'Cities Worldwide', value: (stats?.citiesWorldwide || 0).toString(), icon: '🌍', color: 'purple' },
+    { id: 4, title: 'Verification Rate', value: `${stats?.verificationRate || 0}%`, icon: '✅', color: 'cyan' }
   ];
 
   const getStatusColor = (status: string) => {

@@ -34,7 +34,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
   // Base navigation items available to all users
     const baseNavigation = [
       { name: 'Dashboard', href: '/dashboard', icon: '🏠' },
-      { name: 'Create Event', href: '/event-create', icon: '➕' },
       { name: 'Certificates', href: '/certificates', icon: '🏆' },
       { name: 'Analytics', href: '/analytics', icon: '📊' },
       { name: 'Components Demo', href: '/demo', icon: '🧩' },

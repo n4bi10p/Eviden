@@ -28,7 +28,7 @@ const notifications: Map<string, Notification> = new Map();
 const mockNotifications: Notification[] = [
   {
     id: 'notif_1',
-    user_address: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    user_address: 'alice.johnson@eviden.com',
     type: 'certificate_earned',
     title: 'Certificate Earned! 🏆',
     message: 'Congratulations! You earned a Gold certificate for attending Web3 Summit 2025.',
@@ -44,13 +44,13 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif_2',
-    user_address: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    user_address: 'alice.johnson@eviden.com',
     type: 'validation_received',
     title: 'Peer Validation Received',
-    message: 'You received a validation from alice_crypto for attending Blockchain Workshop.',
+    message: 'You received a validation from alex_crypto for attending Blockchain Workshop.',
     data: {
-      validator_address: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
-      validator_username: 'alice_crypto',
+      validator_address: 'alex.chen@eviden.com',
+      validator_username: 'alex_crypto',
       event_id: 'event_456'
     },
     is_read: true,
@@ -61,7 +61,7 @@ const mockNotifications: Notification[] = [
   },
   {
     id: 'notif_3',
-    user_address: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+    user_address: 'alice.johnson@eviden.com',
     type: 'event_reminder',
     title: 'Event Starting Soon! ⏰',
     message: 'DeFi Workshop Series starts in 30 minutes. Don\'t forget to check in!',
@@ -507,7 +507,7 @@ router.post('/test-email',
         type,
         {
           username: data.username || 'Test User',
-          walletAddress: data.walletAddress || '0x1234567890abcdef1234567890abcdef12345678',
+          walletAddress: data.walletAddress || 'test.user@eviden.com',
           eventName: data.eventName || 'Attestify Email Test',
           message: data.message || 'This is a test email from your Attestify backend server!',
           ...data

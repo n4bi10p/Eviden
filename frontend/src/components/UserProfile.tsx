@@ -4,7 +4,7 @@ import { User, Mail, Building2, Edit3, Save, X, Wallet, Shield, Calendar, Settin
 import Button from './Button';
 
 export default function UserProfile() {
-  const { user, updateProfile, isLoading, walletAddress, walletType } = useWalletAuth();
+  const { user, updateProfile, isLoading, walletAddress, walletType, isConnected } = useWalletAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
@@ -40,6 +40,12 @@ export default function UserProfile() {
   };
 
   const getWalletIcon = () => {
+    console.log('🎨 Getting wallet icon for type:', walletType, 'isConnected:', isConnected);
+    
+    if (!isConnected || !walletType) {
+      return '❌'; // Disconnected state
+    }
+    
     switch (walletType) {
       case 'petra':
         return '🟠';
@@ -258,14 +264,16 @@ export default function UserProfile() {
                 <span className="text-2xl">{getWalletIcon()}</span>
                 <div>
                   <p className="text-white/60 text-sm">Wallet Type</p>
-                  <p className="text-white font-medium capitalize">{walletType || 'Unknown'}</p>
+                  <p className="text-white font-medium capitalize">
+                    {isConnected && walletType ? walletType : 'Not Connected'}
+                  </p>
                 </div>
               </div>
               
               <div className="p-3 bg-white/5 rounded-xl border border-white/10">
                 <p className="text-white/60 text-sm mb-1">Address</p>
                 <p className="text-white font-mono text-sm break-all">
-                  {walletAddress}
+                  {walletAddress || 'No wallet address available'}
                 </p>
               </div>
             </div>

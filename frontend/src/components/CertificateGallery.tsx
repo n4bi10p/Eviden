@@ -16,6 +16,14 @@ interface Certificate {
   tokenId: string;
   verified: boolean;
   imageUrl?: string;
+  participantName?: string;
+  participantEmail?: string;
+  skills?: string[];
+  attendanceDuration?: string;
+  participationScore?: number;
+  validationsReceived?: number;
+  txHash?: string;
+  ipfsUrl?: string;
 }
 
 interface CertificateGalleryProps {
@@ -33,22 +41,58 @@ const CertificateGallery: React.FC<CertificateGalleryProps> = ({ certificates: p
 
   useEffect(() => {
     const fetchCertificates = async () => {
-      if (!user?.address) return;
-      
       try {
         setLoading(true);
+        setError(null);
         const apiService = new ApiService();
-        const response = await apiService.getUserCertificates(user.address);
         
-        if (response.success) {
-          setCertificates(response.data.certificates || []);
+        // First try to get user-specific certificates if user is logged in
+        let response;
+        if (user?.address) {
+          try {
+            response = await apiService.getUserCertificates(user.address);
+          } catch (userError) {
+            console.log('User certificates not found, falling back to demo');
+            response = null;
+          }
+        }
+        
+        // If no user certificates found or no user logged in, use demo certificates
+        if (!response || !response.success || !response.data.certificates.length) {
+          response = await apiService.getDemoCertificates();
+        }
+        
+        if (response.success && response.data.certificates) {
+          // Transform backend certificate data to frontend format
+          const transformedCerts = response.data.certificates.map((cert: any) => ({
+            id: cert.id,
+            title: cert.tier_name || `${cert.tier === 1 ? 'Bronze' : cert.tier === 2 ? 'Silver' : 'Gold'} Certificate`,
+            eventName: cert.metadata.event_name || 'Unknown Event',
+            issuer: 'Eviden Platform',
+            issueDate: new Date(cert.metadata.issued_at).toISOString().split('T')[0],
+            tier: (cert.tier === 1 ? 'Bronze' : cert.tier === 2 ? 'Silver' : 'Gold') as 'Bronze' | 'Silver' | 'Gold',
+            description: cert.description || `Certificate awarded to ${cert.metadata.participant_name} for ${cert.metadata.certificate_type} in ${cert.metadata.event_name}`,
+            tokenId: cert.nft_token_id?.toString() || cert.id,
+            verified: true,
+            imageUrl: cert.image_url,
+            participantName: cert.metadata.participant_name,
+            participantEmail: cert.metadata.participant_email,
+            skills: cert.metadata.skills_acquired || [],
+            attendanceDuration: cert.metadata.attendance_duration,
+            participationScore: cert.metadata.participation_score,
+            validationsReceived: cert.metadata.validations_received || 0,
+            txHash: cert.tx_hash,
+            ipfsUrl: cert.ipfs_url
+          }));
+          
+          setCertificates(transformedCerts);
         } else {
           throw new Error(response.message || 'Failed to fetch certificates');
         }
       } catch (err) {
         console.error('Error fetching certificates:', err);
         setError(err instanceof Error ? err.message : 'Failed to load certificates');
-        // Fallback to mock data
+        // Fallback to frontend mock data
         setCertificates(mockCertificates);
       } finally {
         setLoading(false);
@@ -312,6 +356,64 @@ const CertificateGallery: React.FC<CertificateGalleryProps> = ({ certificates: p
               }`}>
                 {cert.eventName}
               </p>
+
+              {/* Participant Name */}
+              {cert.participantName && (
+                <p className={`text-sm font-medium ${
+                  theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'
+                }`}>
+                  👤 {cert.participantName}
+                </p>
+              )}
+
+              {/* Skills Preview */}
+              {cert.skills && cert.skills.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {cert.skills.slice(0, 2).map((skill, index) => (
+                    <span
+                      key={index}
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        theme === 'dark'
+                          ? 'bg-purple-500/20 text-purple-300'
+                          : 'bg-purple-100 text-purple-700'
+                      }`}
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                  {cert.skills.length > 2 && (
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      theme === 'dark'
+                        ? 'bg-gray-500/20 text-gray-400'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      +{cert.skills.length - 2} more
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Score and Duration */}
+              <div className="flex justify-between items-center text-xs mt-2">
+                {cert.participationScore && (
+                  <span className={`px-2 py-1 rounded-full ${
+                    cert.participationScore >= 90
+                      ? 'bg-green-100 text-green-700'
+                      : cert.participationScore >= 75
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    🎯 {cert.participationScore}%
+                  </span>
+                )}
+                {cert.attendanceDuration && (
+                  <span className={`${
+                    theme === 'dark' ? 'text-white/60' : 'text-slate-600'
+                  }`}>
+                    ⏱️ {cert.attendanceDuration}
+                  </span>
+                )}
+              </div>
               
               <div className="flex justify-between items-center text-sm">
                 <span className={`${
@@ -415,6 +517,126 @@ const CertificateGallery: React.FC<CertificateGalleryProps> = ({ certificates: p
                 }`}>
                   {selectedCert.description}
                 </p>
+
+                {/* Participant Information */}
+                {selectedCert.participantName && (
+                  <div className={`p-4 rounded-lg ${
+                    theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'
+                  }`}>
+                    <h3 className={`font-semibold mb-2 ${
+                      theme === 'dark' ? 'text-white' : 'text-slate-800'
+                    }`}>
+                      👤 Participant Information
+                    </h3>
+                    <div className="grid grid-cols-1 gap-2 text-sm">
+                      <div>
+                        <span className={`font-medium ${
+                          theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'
+                        }`}>
+                          {selectedCert.participantName}
+                        </span>
+                      </div>
+                      {selectedCert.participantEmail && (
+                        <div className={`text-xs ${
+                          theme === 'dark' ? 'text-white/60' : 'text-slate-600'
+                        }`}>
+                          {selectedCert.participantEmail}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Performance Metrics */}
+                {(selectedCert.participationScore || selectedCert.attendanceDuration || selectedCert.validationsReceived !== undefined) && (
+                  <div className={`p-4 rounded-lg ${
+                    theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'
+                  }`}>
+                    <h3 className={`font-semibold mb-3 ${
+                      theme === 'dark' ? 'text-white' : 'text-slate-800'
+                    }`}>
+                      📊 Performance Metrics
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      {selectedCert.participationScore && (
+                        <div>
+                          <span className={`font-medium ${
+                            theme === 'dark' ? 'text-white/80' : 'text-slate-700'
+                          }`}>
+                            Score:
+                          </span>
+                          <br />
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            selectedCert.participationScore >= 90
+                              ? 'bg-green-100 text-green-700'
+                              : selectedCert.participationScore >= 75
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-blue-100 text-blue-700'
+                          }`}>
+                            🎯 {selectedCert.participationScore}%
+                          </span>
+                        </div>
+                      )}
+                      {selectedCert.attendanceDuration && (
+                        <div>
+                          <span className={`font-medium ${
+                            theme === 'dark' ? 'text-white/80' : 'text-slate-700'
+                          }`}>
+                            Duration:
+                          </span>
+                          <br />
+                          <span className={`${
+                            theme === 'dark' ? 'text-white/70' : 'text-slate-600'
+                          }`}>
+                            ⏱️ {selectedCert.attendanceDuration}
+                          </span>
+                        </div>
+                      )}
+                      {selectedCert.validationsReceived !== undefined && (
+                        <div>
+                          <span className={`font-medium ${
+                            theme === 'dark' ? 'text-white/80' : 'text-slate-700'
+                          }`}>
+                            Validations:
+                          </span>
+                          <br />
+                          <span className={`${
+                            theme === 'dark' ? 'text-white/70' : 'text-slate-600'
+                          }`}>
+                            ✅ {selectedCert.validationsReceived}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Skills Acquired */}
+                {selectedCert.skills && selectedCert.skills.length > 0 && (
+                  <div className={`p-4 rounded-lg ${
+                    theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'
+                  }`}>
+                    <h3 className={`font-semibold mb-3 ${
+                      theme === 'dark' ? 'text-white' : 'text-slate-800'
+                    }`}>
+                      🎓 Skills Acquired
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCert.skills.map((skill, index) => (
+                        <span
+                          key={index}
+                          className={`px-3 py-1 text-sm rounded-full ${
+                            theme === 'dark'
+                              ? 'bg-purple-500/20 text-purple-300'
+                              : 'bg-purple-100 text-purple-700'
+                          }`}
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
@@ -460,6 +682,52 @@ const CertificateGallery: React.FC<CertificateGalleryProps> = ({ certificates: p
                     </span>
                   </div>
                 </div>
+
+                {/* Blockchain Information */}
+                {(selectedCert.txHash || selectedCert.ipfsUrl) && (
+                  <div className={`p-4 rounded-lg ${
+                    theme === 'dark' ? 'bg-white/5' : 'bg-slate-50'
+                  }`}>
+                    <h3 className={`font-semibold mb-3 ${
+                      theme === 'dark' ? 'text-white' : 'text-slate-800'
+                    }`}>
+                      🔗 Blockchain Details
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      {selectedCert.txHash && (
+                        <div>
+                          <span className={`font-medium ${
+                            theme === 'dark' ? 'text-white/80' : 'text-slate-700'
+                          }`}>
+                            Transaction Hash:
+                          </span>
+                          <br />
+                          <span className="font-mono text-xs break-all">
+                            {selectedCert.txHash}
+                          </span>
+                        </div>
+                      )}
+                      {selectedCert.ipfsUrl && (
+                        <div>
+                          <span className={`font-medium ${
+                            theme === 'dark' ? 'text-white/80' : 'text-slate-700'
+                          }`}>
+                            IPFS URL:
+                          </span>
+                          <br />
+                          <a 
+                            href={selectedCert.ipfsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:text-blue-600 font-mono text-xs break-all"
+                          >
+                            {selectedCert.ipfsUrl}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Verification Status */}
                 <div className={`flex items-center space-x-2 p-3 rounded-lg ${

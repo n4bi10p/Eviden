@@ -46,7 +46,7 @@ const users: Map<string, UserProfile> = new Map();
 // Initialize with some mock data
 const mockUser1: UserProfile = {
   id: 'user_1',
-  address: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+  address: 'alice.johnson@eviden.com',
   email: 'alice@example.com',
   username: 'alice_crypto',
   full_name: 'Alice Johnson',

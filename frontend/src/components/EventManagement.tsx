@@ -27,7 +27,7 @@ export function EventManagement() {
 
   // Memoize the params to prevent infinite re-renders
   const eventsParams = useMemo(() => ({
-    organizer: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // Mock organizer for demo
+    organizer: 'alice.johnson@eviden.com', // Mock organizer for demo
     ...(searchTerm && { search: searchTerm }),
     ...(categoryFilter && { category: categoryFilter }),
     ...(statusFilter && { status: statusFilter as any }),

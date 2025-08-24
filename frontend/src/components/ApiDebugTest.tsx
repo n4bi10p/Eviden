@@ -36,7 +36,7 @@ export function ApiDebugTest() {
       // Test 2: Events (simplified parameters)
       try {
         const events = await apiService.getEvents({ 
-          organizer: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+          organizer: 'alice.johnson@eviden.com'
         });
         results.push({
           test: 'Get Events',

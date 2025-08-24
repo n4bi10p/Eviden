@@ -188,6 +188,10 @@ export class ApiService {
     return this.request(`/certificates/user/${address}`);
   }
 
+  async getDemoCertificates() {
+    return this.request(`/certificates/demo`);
+  }
+
   async getEventCertificates(eventId: string) {
     return this.request(`/certificates/event/${eventId}`);
   }

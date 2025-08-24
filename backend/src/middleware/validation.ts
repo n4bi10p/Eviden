@@ -85,20 +85,23 @@ export const eventSchemas = {
   }),
 
   getEvents: Joi.object({
-    ...commonSchemas.pagination.describe().keys,
-    search: Joi.string().max(100),
-    category: Joi.string().max(50),
-    status: Joi.string().valid('upcoming', 'ongoing', 'completed'),
+    page: Joi.number().integer().min(1).optional(),
+    limit: Joi.number().integer().min(1).max(100).optional(),
+    sortBy: Joi.string().optional(),
+    sortOrder: Joi.string().valid('asc', 'desc').optional(),
+    search: Joi.string().max(100).optional(),
+    category: Joi.string().max(50).optional(),
+    status: Joi.string().valid('upcoming', 'ongoing', 'completed').optional(),
     organizer: Joi.string().pattern(/^0x[a-fA-F0-9]+$/).optional().messages({
       'string.pattern.base': 'Invalid Aptos address format'
     }),
-    start_date: Joi.date(),
-    end_date: Joi.date().greater(Joi.ref('start_date')),
+    start_date: Joi.date().optional(),
+    end_date: Joi.date().greater(Joi.ref('start_date')).optional(),
     near_location: Joi.object({
       latitude: Joi.number().min(-90).max(90).required(),
       longitude: Joi.number().min(-180).max(180).required(),
       radius: Joi.number().min(1).max(100000).default(10000) // radius in meters
-    })
+    }).optional()
   })
 };
 
@@ -156,10 +159,13 @@ export const certificateSchemas = {
   }),
 
   getCertificates: Joi.object({
-    ...commonSchemas.pagination.describe().keys,
-    owner: commonSchemas.address,
-    event_id: commonSchemas.eventId,
-    tier: Joi.number().integer().min(1).max(3)
+    page: Joi.number().integer().min(1).optional(),
+    limit: Joi.number().integer().min(1).max(100).optional(),
+    sortBy: Joi.string().optional(),
+    sortOrder: Joi.string().valid('asc', 'desc').optional(),
+    owner: commonSchemas.address.optional(),
+    event_id: commonSchemas.eventId.optional(),
+    tier: Joi.number().integer().min(1).max(3).optional()
   })
 };
 
@@ -178,13 +184,16 @@ export const notificationSchemas = {
   }),
 
   getNotifications: Joi.object({
-    ...commonSchemas.pagination.describe().keys,
+    page: Joi.number().integer().min(1).optional(),
+    limit: Joi.number().integer().min(1).max(100).optional(),
+    sortBy: Joi.string().optional(),
+    sortOrder: Joi.string().valid('asc', 'desc').optional(),
     type: Joi.string().valid(
       'event_reminder', 'check_in_success', 'peer_validation', 
       'certificate_earned', 'event_update', 'system_update'
-    ),
-    read: Joi.boolean(),
-    since: Joi.date()
+    ).optional(),
+    read: Joi.boolean().optional(),
+    since: Joi.date().optional()
   }),
 
   markAsRead: Joi.object({

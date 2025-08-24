@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useWalletAuth } from '../contexts/WalletAuthContext';
 import GlassCard from './GlassCard';
 import MacOSButton from './MacOSButton';
+import { ApiService } from '../services/ApiService';
 
 interface Certificate {
   id: string;
@@ -22,8 +24,39 @@ interface CertificateGalleryProps {
 
 const CertificateGallery: React.FC<CertificateGalleryProps> = ({ certificates: propCerts }) => {
   const { theme } = useTheme();
+  const { user } = useWalletAuth();
   const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
   const [filter, setFilter] = useState<'all' | 'Bronze' | 'Silver' | 'Gold'>('all');
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      if (!user?.address) return;
+      
+      try {
+        setLoading(true);
+        const apiService = new ApiService();
+        const response = await apiService.getUserCertificates(user.address);
+        
+        if (response.success) {
+          setCertificates(response.data.certificates || []);
+        } else {
+          throw new Error(response.message || 'Failed to fetch certificates');
+        }
+      } catch (err) {
+        console.error('Error fetching certificates:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load certificates');
+        // Fallback to mock data
+        setCertificates(mockCertificates);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCertificates();
+  }, [user?.address]);
 
   // Mock certificates data
   const mockCertificates: Certificate[] = propCerts || [
@@ -108,8 +141,8 @@ const CertificateGallery: React.FC<CertificateGalleryProps> = ({ certificates: p
   };
 
   const filteredCertificates = filter === 'all' 
-    ? mockCertificates 
-    : mockCertificates.filter(cert => cert.tier === filter);
+    ? certificates 
+    : certificates.filter(cert => cert.tier === filter);
 
   const handleShare = (cert: Certificate) => {
     // Simulate sharing functionality
@@ -138,6 +171,37 @@ const CertificateGallery: React.FC<CertificateGalleryProps> = ({ certificates: p
     element.click();
     document.body.removeChild(element);
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-300 rounded w-64 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-64 bg-gray-300 rounded-lg"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-500 mb-4">⚠️ {error}</div>
+        <MacOSButton 
+          onClick={() => window.location.reload()} 
+          variant="secondary"
+        >
+          Retry
+        </MacOSButton>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -180,8 +244,8 @@ const CertificateGallery: React.FC<CertificateGalleryProps> = ({ certificates: p
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {['all', 'Gold', 'Silver', 'Bronze'].map((tier) => {
           const count = tier === 'all' 
-            ? mockCertificates.length 
-            : mockCertificates.filter(c => c.tier === tier).length;
+            ? certificates.length 
+            : certificates.filter(c => c.tier === tier).length;
           
           return (
             <GlassCard key={tier} className="text-center p-4">

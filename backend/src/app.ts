@@ -20,6 +20,7 @@ import uploadRoutes from './routes/uploads';
 import qrCodeRoutes from './routes/qr-codes';
 import attendanceRoutes from './routes/attendance';
 import pushNotificationRoutes from './routes/push-notifications';
+import analyticsRoutes from './routes/analytics';
 
 // Import services
 import { JobService } from './services/JobService';
@@ -185,6 +186,7 @@ class App {
     this.app.use('/api/qr-codes', qrCodeRoutes);
     this.app.use('/api/attendance', attendanceRoutes);
     this.app.use('/api/push-notifications', pushNotificationRoutes);
+    this.app.use('/api/analytics', analyticsRoutes);
 
     // Serve uploaded files statically
     this.app.use('/uploads', express.static('uploads'));

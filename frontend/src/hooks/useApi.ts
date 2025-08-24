@@ -85,7 +85,7 @@ export function useUserStats(address: string) {
 }
 
 export function useGlobalStats() {
-  return useApi(() => apiService.getGlobalStats());
+  return useApi(() => apiService.getDashboardStats());
 }
 
 // Certificates API hooks

@@ -89,7 +89,9 @@ export const eventSchemas = {
     search: Joi.string().max(100),
     category: Joi.string().max(50),
     status: Joi.string().valid('upcoming', 'ongoing', 'completed'),
-    organizer: commonSchemas.address,
+    organizer: Joi.string().pattern(/^0x[a-fA-F0-9]+$/).optional().messages({
+      'string.pattern.base': 'Invalid Aptos address format'
+    }),
     start_date: Joi.date(),
     end_date: Joi.date().greater(Joi.ref('start_date')),
     near_location: Joi.object({

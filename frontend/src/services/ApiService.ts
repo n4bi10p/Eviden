@@ -346,6 +346,16 @@ export class ApiService {
   async exportEventAttendees(eventId: string) {
     return this.request(`/events/${eventId}/attendees/export`);
   }
+
+  // Dashboard stats
+  async getDashboardStats() {
+    return this.request('/analytics/dashboard');
+  }
+
+  // Additional analytics methods
+  async getEventStats(eventId: string) {
+    return this.request(`/analytics/events/${eventId}`);
+  }
 }
 
 // Global API instance

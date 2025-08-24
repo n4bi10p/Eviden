@@ -1,13 +1,47 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useWalletAuth } from '../contexts/WalletAuthContext';
 import { Link } from 'react-router-dom';
 import ResponsiveLayout from '../components/ResponsiveLayout';
 import GlassCard from '../components/GlassCard';
+import { ApiService } from '../services/ApiService';
+
+interface EventData {
+  id: string;
+  title: string;
+  description: string;
+  organizer: string;
+  date: string;
+  time: string;
+  location: string;
+  price: string;
+  status: 'upcoming' | 'ongoing' | 'completed';
+  image: string;
+  category: string;
+  max_attendees: number;
+  current_attendees: number;
+  created_at: string;
+}
+
+interface DashboardStats {
+  totalEvents: number;
+  totalAttendees: number;
+  citiesWorldwide: number;
+  verificationRate: number;
+}
 
 const Dashboard: React.FC = () => {
   const { user, isLoading } = useWalletAuth();
   const { theme } = useTheme();
+  const [events, setEvents] = useState<EventData[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalEvents: 0,
+    totalAttendees: 0,
+    citiesWorldwide: 0,
+    verificationRate: 0
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -32,60 +66,61 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  // Mock data matching the inspirational UI
-  const stats = [
-    { id: 1, title: 'Upcoming Events', value: '12', icon: '📅', color: 'blue' },
-    { id: 2, title: 'Total Attendees', value: '3.2K', icon: '👥', color: 'green' },
-    { id: 3, title: 'Cities Worldwide', value: '45', icon: '🌍', color: 'purple' },
-    { id: 4, title: 'Verification Rate', value: '98%', icon: '✅', color: 'cyan' }
-  ];
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      const apiService = new ApiService();
+      try {
+        setLoadingStats(true);
 
-  const featuredEvents = [
-    {
-      id: 1,
-      title: 'Blockchain Security Summit 2025',
-      organizer: 'TechCorp Events',
-      date: 'March 15, 2025',
-      time: '10:00 AM - 6:00 PM',
-      location: 'Moscone Center, San Francisco',
-      price: 'Free',
-      attendees: 245,
-      maxAttendees: 300,
-      status: 'upcoming',
-      description: 'Join industry leaders for comprehensive blockchain security discussions.',
-      tags: ['Security', 'Enterprise', 'Networking'],
-      image: '🔐'
-    },
-    {
-      id: 2,
-      title: 'DeFi Innovation Conference',
-      organizer: 'DeFi Alliance',
-      date: 'March 20, 2025',
-      time: '9:00 AM - 5:00 PM',
-      location: 'Jacob Javits Center, New York',
-      price: '$299',
-      attendees: 189,
-      maxAttendees: 250,
-      status: 'upcoming',
-      description: 'Explore the latest innovations in decentralized finance.',
-      tags: ['DeFi', 'Innovation', 'Finance'],
-      image: '💰'
-    },
-    {
-      id: 3,
-      title: 'Web3 Developer Bootcamp',
-      organizer: 'DevCommunity',
-      date: 'February 28, 2025',
-      time: 'Full Day Workshop',
-      location: 'Austin Convention Center',
-      price: '$199',
-      attendees: 156,
-      maxAttendees: 200,
-      status: 'completed',
-      description: 'Hands-on workshop for building Web3 applications.',
-      tags: ['Development', 'Hands-on', 'Web3'],
-      image: '👨‍💻'
+        // Fetch events
+        const eventsResponse = await apiService.getEvents({ limit: 6, status: 'upcoming' });
+        if (eventsResponse.success) {
+          setEvents(eventsResponse.data.events || []);
+        }
+
+        // Fetch analytics/stats (we'll create this endpoint or use existing ones)
+        try {
+          const statsResponse = await apiService.getDashboardStats();
+          if (statsResponse.success) {
+            setStats(statsResponse.data);
+          }
+        } catch (statsError) {
+          // Fallback to mock data if stats endpoint doesn't exist
+          setStats({
+            totalEvents: 12,
+            totalAttendees: 3200,
+            citiesWorldwide: 45,
+            verificationRate: 98
+          });
+        }
+
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        // Fallback to mock data
+        setEvents([]);
+        setStats({
+          totalEvents: 12,
+          totalAttendees: 3200,
+          citiesWorldwide: 45,
+          verificationRate: 98
+        });
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    if (user) {
+      fetchDashboardData();
     }
+  }, [user]);
+
+  // Statistics display data
+  const statsDisplay = [
+    { id: 1, title: 'Upcoming Events', value: stats.totalEvents.toString(), icon: '📅', color: 'blue' },
+    { id: 2, title: 'Total Attendees', value: stats.totalAttendees > 1000 ? `${(stats.totalAttendees/1000).toFixed(1)}K` : stats.totalAttendees.toString(), icon: '👥', color: 'green' },
+    { id: 3, title: 'Cities Worldwide', value: stats.citiesWorldwide.toString(), icon: '🌍', color: 'purple' },
+    { id: 4, title: 'Verification Rate', value: `${stats.verificationRate}%`, icon: '✅', color: 'cyan' }
   ];
 
   const getStatusColor = (status: string) => {
@@ -152,13 +187,13 @@ const Dashboard: React.FC = () => {
 
         {/* Statistics Grid */}
         <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
-          {stats.map((stat) => (
+          {statsDisplay.map((stat) => (
             <GlassCard key={stat.id} className="text-center hover:scale-105 transition-transform duration-200">
               <div className="flex items-center justify-center mb-3">
                 <span className="text-3xl">{stat.icon}</span>
               </div>
               <div className={`text-3xl font-bold mb-2 ${getStatColor(stat.color)}`}>
-                {stat.value}
+                {loadingStats ? '...' : stat.value}
               </div>
               <div className={`text-sm font-medium ${
                 theme === 'dark' ? 'text-white/70' : 'text-slate-600'
@@ -177,7 +212,7 @@ const Dashboard: React.FC = () => {
             Featured Events
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {featuredEvents.map((event) => (
+            {events.map((event: any) => (
               <GlassCard key={event.id} className="hover:scale-105 transition-all duration-300 group">
                 <div className="space-y-4">
                   {/* Event Header */}
@@ -245,7 +280,7 @@ const Dashboard: React.FC = () => {
 
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2">
-                      {event.tags.map((tag, index) => (
+                      {event.tags && event.tags.map((tag: string, index: number) => (
                         <span
                           key={index}
                           className={`px-2 py-1 rounded text-xs ${

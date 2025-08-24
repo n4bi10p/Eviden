@@ -1,10 +1,10 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { useGlobalStats, useEvents } from '../hooks/useApi';
 import StatCard from './ui/StatCard';
 import Chart from './ui/Chart';
 import { cn } from '../utils';
 import { Calendar, Users, Award, TrendingUp, Activity } from 'lucide-react';
+import { ApiService } from '../services/ApiService';
 
 interface DashboardStats {
   totalEvents: number;
@@ -20,49 +20,90 @@ interface DashboardStats {
 export function LiveAnalyticsDashboard() {
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState('overview');
-  
-  // Memoize the params to prevent infinite re-renders
-  const eventsParams = useMemo(() => ({
-    organizer: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef', // Mock organizer for demo
-  }), []);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+    totalEvents: 0,
+    totalUsers: 0,
+    totalCertificates: 0,
+    activeEvents: 0,
+    upcomingEvents: 0,
+    completedEvents: 0,
+    growthRate: 0,
+    engagementRate: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [chartData, setChartData] = useState<any[]>([]);
   
   // Fetch real-time data
-  const { data: globalStats, loading: statsLoading, refetch: refetchStats } = useGlobalStats();
-  const { data: eventsData, loading: eventsLoading, refetch: refetchEvents } = useEvents(eventsParams);
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      try {
+        setLoading(true);
+        const apiService = new ApiService();
+        
+        // Try to fetch dashboard stats
+        try {
+          const statsResponse = await apiService.getDashboardStats();
+          if (statsResponse.success) {
+            setDashboardStats(statsResponse.data);
+          } else {
+            throw new Error('Failed to fetch stats');
+          }
+        } catch (statsError) {
+          // Fallback to mock data if API doesn't exist yet
+          setDashboardStats({
+            totalEvents: 156,
+            totalUsers: 2847,
+            totalCertificates: 1293,
+            activeEvents: 23,
+            upcomingEvents: 47,
+            completedEvents: 86,
+            growthRate: 24.5,
+            engagementRate: 87.3,
+          });
+        }
+
+        // Set mock chart data (would be fetched from API in real implementation)
+        setChartData([
+          { name: 'Jan', events: 45, users: 234, certificates: 123 },
+          { name: 'Feb', events: 52, users: 345, certificates: 156 },
+          { name: 'Mar', events: 38, users: 289, certificates: 134 },
+          { name: 'Apr', events: 67, users: 456, certificates: 234 },
+          { name: 'May', events: 84, users: 567, certificates: 345 },
+          { name: 'Jun', events: 92, users: 678, certificates: 456 },
+        ]);
+
+      } catch (err) {
+        console.error('Error fetching analytics data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load analytics data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalyticsData();
+  }, []);
 
   // Refresh data every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      refetchStats();
-      refetchEvents();
+      const fetchData = async () => {
+        try {
+          const apiService = new ApiService();
+          const statsResponse = await apiService.getDashboardStats();
+          if (statsResponse.success) {
+            setDashboardStats(statsResponse.data);
+          }
+        } catch (error) {
+          console.error('Error refreshing analytics data:', error);
+        }
+      };
+      
+      fetchData();
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [refetchStats, refetchEvents]);
-
-  // Mock data for development (replace with real API data)
-  const dashboardStats: DashboardStats = {
-    totalEvents: globalStats?.totalEvents || 156,
-    totalUsers: globalStats?.totalUsers || 2847,
-    totalCertificates: globalStats?.totalCertificates || 1293,
-    activeEvents: globalStats?.activeEvents || 23,
-    upcomingEvents: globalStats?.upcomingEvents || 47,
-    completedEvents: globalStats?.completedEvents || 86,
-    growthRate: globalStats?.growthRate || 24.5,
-    engagementRate: globalStats?.engagementRate || 87.3,
-  };
-
-  // Chart data for analytics
-  const chartData = [
-    { name: 'Jan', events: 45, users: 234, certificates: 123 },
-    { name: 'Feb', events: 52, users: 345, certificates: 156 },
-    { name: 'Mar', events: 38, users: 289, certificates: 134 },
-    { name: 'Apr', events: 67, users: 456, certificates: 234 },
-    { name: 'May', events: 84, users: 567, certificates: 345 },
-    { name: 'Jun', events: 92, users: 678, certificates: 456 },
-  ];
-
-  const isLoading = statsLoading || eventsLoading;
+  }, []);
 
   // Tab navigation
   const tabs = [
@@ -71,6 +112,35 @@ export function LiveAnalyticsDashboard() {
     { id: 'users', label: 'Users' },
     { id: 'certificates', label: 'Certificates' },
   ];
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-cyan-500 mb-4"></div>
+          <p className="text-lg">Loading analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">⚠️ {error}</div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn(
@@ -94,7 +164,7 @@ export function LiveAnalyticsDashboard() {
           )}>
             Real-time insights and performance metrics
           </p>
-          {isLoading && (
+          {loading && (
             <div className="inline-flex items-center mt-2 text-sm text-blue-500">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
               Loading real-time data...
@@ -203,19 +273,25 @@ export function LiveAnalyticsDashboard() {
                   Recent Events Performance
                 </h3>
                 <div className="space-y-3">
-                  {(eventsData?.events || []).slice(0, 5).map((event: any, index: number) => (
-                    <div key={event.id || index} className="flex items-center justify-between">
+                  {[
+                    { id: 1, title: 'Web3 Summit 2025', attendees: 245 },
+                    { id: 2, title: 'Blockchain Conference', attendees: 189 },
+                    { id: 3, title: 'DeFi Workshop', attendees: 156 },
+                    { id: 4, title: 'Smart Contracts 101', attendees: 134 },
+                    { id: 5, title: 'NFT Masterclass', attendees: 123 }
+                  ].map((event) => (
+                    <div key={event.id} className="flex items-center justify-between">
                       <span className={cn(
                         'text-sm',
                         theme === 'dark' ? 'text-white/80' : 'text-slate-700'
                       )}>
-                        {event.title || `Event ${index + 1}`}
+                        {event.title}
                       </span>
                       <span className={cn(
                         'text-sm font-medium',
                         theme === 'dark' ? 'text-green-400' : 'text-green-600'
                       )}>
-                        {event.attendeeCount || Math.floor(Math.random() * 200) + 50} attendees
+                        {event.attendees} attendees
                       </span>
                     </div>
                   ))}

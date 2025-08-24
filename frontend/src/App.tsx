@@ -15,7 +15,6 @@ import EventCheckin from './pages/EventCheckin';
 import AttendancePage from './pages/AttendancePage';
 import Certificates from './pages/Certificates';
 import Profile from './pages/Profile';
-import Events from './pages/Events';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import ComponentsDemo from './pages/ComponentsDemo';
@@ -51,11 +50,7 @@ const AppRouter: React.FC = () => {
             </ProtectedRoute>
           } />
           
-          <Route path="/events" element={
-            <ProtectedRoute>
-              <Events />
-            </ProtectedRoute>
-          } />
+
           
           <Route path="/event-create" element={
             <ProtectedRoute>
@@ -130,23 +125,28 @@ const AppRouter: React.FC = () => {
   );
 };
 
+
+import { EventProvider } from './contexts/EventContext';
+
 function App() {
   return (
     <ThemeProvider>
       <WalletAuthProvider>
-        <AppRouter />
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              color: 'white',
-            },
-          }}
-        />
+        <EventProvider>
+          <AppRouter />
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: 'white',
+              },
+            }}
+          />
+        </EventProvider>
       </WalletAuthProvider>
     </ThemeProvider>
   );

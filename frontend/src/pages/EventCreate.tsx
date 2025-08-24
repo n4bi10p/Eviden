@@ -1,17 +1,20 @@
+
 import React, { useState } from 'react';
 import ResponsiveLayout from '../components/ResponsiveLayout';
 import EventCreationWizard from '../components/EventCreationWizard';
 import MacOSButton from '../components/MacOSButton';
 import { useTheme } from '../contexts/ThemeContext';
+import { useEvents } from '../contexts/EventContext';
 
 const EventCreate: React.FC = () => {
   const { theme } = useTheme();
   const [showWizard, setShowWizard] = useState(true);
 
+
+  const { addEvent } = useEvents();
   const handleEventCreated = (eventData: any) => {
-    console.log('Event created:', eventData);
+    addEvent(eventData);
     setShowWizard(false);
-    // Handle successful event creation
   };
 
   const handleCloseWizard = () => {

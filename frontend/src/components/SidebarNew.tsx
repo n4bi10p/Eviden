@@ -30,27 +30,13 @@ const Sidebar: React.FC<SidebarProps> = () => {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  // Base navigation items available to all users
-  const baseNavigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: '🏠' },
-    { name: 'Profile', href: '/profile', icon: '👤' },
-    { name: 'Settings', href: '/settings', icon: '⚙️' },
-  ];
-
   // Unified navigation for all users
-  const allNavigation = [
+  const navigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: '🏠' },
     { name: 'Events', href: '/events', icon: '📅' },
-    { name: 'Create Event', href: '/event-create', icon: '➕' },
     { name: 'Certificates', href: '/certificates', icon: '🏆' },
     { name: 'Analytics', href: '/analytics', icon: '📊' },
     { name: 'Components Demo', href: '/demo', icon: '🧩' },
-  ];
-
-  // Combine navigation
-  const navigation = [
-    ...baseNavigation.slice(0, 1), // Dashboard first
-    ...allNavigation,
-    ...baseNavigation.slice(1), // Profile and Settings at the end
   ];
 
   const handleNavClick = () => {
@@ -94,10 +80,10 @@ const Sidebar: React.FC<SidebarProps> = () => {
 
       {/* Sidebar */}
       <div className={`
-        ${isMobile ? 'fixed' : 'relative'} 
-        ${isMobile && !isMobileMenuOpen ? '-translate-x-full' : 'translate-x-0'}
+        ${isMobile ? 'fixed' : 'sticky'}
+        ${isMobile && !isMobileMenuOpen ? '-translate-x-full md:translate-x-0' : 'translate-x-0'}
         w-64 h-screen glass-dark left-0 top-0 z-40 border-r flex flex-col transition-transform duration-300 ease-in-out
-        md:translate-x-0 md:relative md:z-10
+        md:sticky md:top-0 md:h-screen md:z-10
         ${theme === 'dark' ? 'border-cyber-purple/30' : 'border-gray-300/30'}
       `}>
         <div className="flex-1 p-4 md:p-6 overflow-y-auto">

@@ -447,4 +447,79 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
+// Add some seed events for testing
+const seedEvents = () => {
+  const now = Date.now();
+  const oneDay = 24 * 60 * 60 * 1000;
+  const oneWeek = 7 * oneDay;
+
+  const sampleEvents: Event[] = [
+    {
+      id: '1',
+      name: 'Blockchain Security Summit 2025',
+      description: 'Join leading experts in comprehensive blockchain security discussions.',
+      organizer: '0x1234567890abcdef1234567890abcdef12345678',
+      start_time: now + oneWeek,
+      end_time: now + oneWeek + (8 * 60 * 60 * 1000),
+      venue_name: 'Moscone Center',
+      venue_address: 'San Francisco, CA',
+      latitude: 37.7749,
+      longitude: -122.4194,
+      max_attendees: 500,
+      check_in_radius: 100,
+      image_url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87',
+      created_at: now - oneDay,
+      is_active: true,
+      tags: ['blockchain', 'security', 'conference']
+    },
+    {
+      id: '2',
+      name: 'DeFi Innovation Conference',
+      description: 'Explore the latest innovations in decentralized finance.',
+      organizer: '0x1234567890abcdef1234567890abcdef12345678',
+      start_time: now + (2 * oneWeek),
+      end_time: now + (2 * oneWeek) + (6 * 60 * 60 * 1000),
+      venue_name: 'Jacob Javits Center',
+      venue_address: 'New York, NY',
+      latitude: 40.7128,
+      longitude: -74.0060,
+      max_attendees: 300,
+      check_in_radius: 150,
+      image_url: 'https://images.unsplash.com/photo-1559223607-b4d0555ae227',
+      created_at: now - oneDay,
+      is_active: true,
+      tags: ['defi', 'finance', 'innovation']
+    },
+    {
+      id: '3',
+      name: 'Web3 Developer Bootcamp',
+      description: 'Hands-on workshop for building Web3 applications.',
+      organizer: '0x1234567890abcdef1234567890abcdef12345678',
+      start_time: now + (3 * oneWeek),
+      end_time: now + (3 * oneWeek) + (12 * 60 * 60 * 1000),
+      venue_name: 'Austin Convention Center',
+      venue_address: 'Austin, TX',
+      latitude: 30.2672,
+      longitude: -97.7431,
+      max_attendees: 200,
+      check_in_radius: 100,
+      image_url: 'https://images.unsplash.com/photo-1517180102446-f3ece451e9d8',
+      created_at: now - oneDay,
+      is_active: true,
+      tags: ['web3', 'development', 'workshop']
+    }
+  ];
+
+  sampleEvents.forEach(event => {
+    events.set(event.id, event);
+    attendees.set(event.id, new Set());
+    checkIns.set(event.id, new Map());
+  });
+
+  console.log(`🌱 Seeded ${sampleEvents.length} sample events`);
+};
+
+// Initialize seed data
+seedEvents();
+
 export default router;

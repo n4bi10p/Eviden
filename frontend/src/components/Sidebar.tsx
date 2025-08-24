@@ -32,16 +32,15 @@ const Sidebar: React.FC<SidebarProps> = () => {
   }, []);
 
   // Base navigation items available to all users
-  const baseNavigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: '🏠' },
-    { name: 'Events', href: '/events', icon: '📅' },
-    { name: 'Create Event', href: '/event-create', icon: '➕' },
-    { name: 'Certificates', href: '/certificates', icon: '🏆' },
-    { name: 'Analytics', href: '/analytics', icon: '📊' },
-    { name: 'Components Demo', href: '/demo', icon: '🧩' },
-    { name: 'Profile', href: '/profile', icon: '👤' },
-    { name: 'Settings', href: '/settings', icon: '⚙️' },
-  ];
+    const baseNavigation = [
+      { name: 'Dashboard', href: '/dashboard', icon: '🏠' },
+      { name: 'Create Event', href: '/event-create', icon: '➕' },
+      { name: 'Certificates', href: '/certificates', icon: '🏆' },
+      { name: 'Analytics', href: '/analytics', icon: '📊' },
+      { name: 'Components Demo', href: '/demo', icon: '🧩' },
+      { name: 'Profile', href: '/profile', icon: '👤' },
+      { name: 'Settings', href: '/settings', icon: '⚙️' },
+    ];
 
   // All navigation items in the order shown in the screenshot
   const navigation = baseNavigation;
@@ -89,10 +88,10 @@ const Sidebar: React.FC<SidebarProps> = () => {
 
       {/* Responsive Sidebar */}
       <div className={`
-        fixed lg:relative
+        ${isMobile ? 'fixed' : 'sticky'}
         ${isMobile && !isMobileMenuOpen ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'}
         w-72 sm:w-80 lg:w-56 xl:w-64 h-screen glass-dark left-0 top-0 z-40 border-r flex flex-col transition-transform duration-300 ease-in-out
-        lg:z-10
+        lg:sticky lg:top-0 lg:h-screen lg:z-10
         ${theme === 'dark' ? 'border-cyber-purple/30' : 'border-gray-300/30'}
       `}>
         <div className="flex-1 spacing-responsive-sm overflow-y-auto">

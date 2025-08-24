@@ -52,7 +52,7 @@ interface WalletAuthProviderProps {
 export function WalletAuthProvider({ children }: WalletAuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with true to show loading during initialization
   const [error, setError] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [walletType, setWalletType] = useState<'petra' | 'martian' | 'pontem' | null>(null);
@@ -439,7 +439,11 @@ export function WalletAuthProvider({ children }: WalletAuthProviderProps) {
       // Ignore logout errors
     } finally {
       apiService.clearToken();
+      localStorage.removeItem('authToken');
       setUser(null);
+      setIsConnected(false);
+      setWalletAddress(null);
+      setWalletType(null);
       toast.success('Logged out successfully');
     }
   };
@@ -478,6 +482,55 @@ export function WalletAuthProvider({ children }: WalletAuthProviderProps) {
   };
 
   const refreshUser = refreshUserProfile;
+
+  // Initialize authentication state on app load
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Check for stored auth token
+        const storedToken = localStorage.getItem('authToken');
+        if (storedToken) {
+          // Set token in API service
+          apiService.setToken(storedToken);
+          
+          // Try to fetch user profile to verify token is still valid
+          try {
+            const response = await apiService.getCurrentUser();
+            
+            // Handle wrapped response format from backend
+            let user;
+            if (response.success && response.data?.user) {
+              user = response.data.user;
+            } else if (response.user) {
+              user = response.user;
+            } else {
+              user = response;
+            }
+            
+            if (user) {
+              setUser(user);
+              console.log('✅ Session restored successfully:', user);
+            } else {
+              throw new Error('Invalid user data in response');
+            }
+          } catch (error) {
+            // Token is invalid, clear it
+            console.log('❌ Invalid stored token, clearing session');
+            localStorage.removeItem('authToken');
+            apiService.clearToken();
+          }
+        }
+      } catch (error) {
+        console.error('Failed to initialize auth:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, []);
 
   const contextValue: WalletAuthContextType = {
     user,

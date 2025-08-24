@@ -283,10 +283,12 @@ router.get('/profile',
           id: user.id,
           address: user.address,
           email: user.email,
-          name: user.name,
+          full_name: user.name, // Map name to full_name for frontend consistency
           role: user.role,
           organizationName: user.organizationName,
           organizationDescription: user.organizationDescription,
+          emailVerified: user.emailVerified || false,
+          isVerified: user.isVerified || false,
           created_at: user.created_at,
           last_login: user.last_login
         }

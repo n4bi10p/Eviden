@@ -98,6 +98,10 @@ export class ApiService {
   }
 
   // User profile methods
+  async getCurrentUser(): Promise<any> {
+    return this.request('/auth/profile');
+  }
+
   async getUserProfile(address: string): Promise<any> {
     return this.request(`/users/${address}`);
   }

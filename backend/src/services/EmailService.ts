@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import config from '../config';
+import crypto from 'crypto';
 
 export class EmailService {
   private transporter: nodemailer.Transporter;
@@ -504,6 +505,68 @@ export class EmailService {
       return true;
     } catch (error) {
       console.error('❌ Email configuration test failed:', error);
+      return false;
+    }
+  }
+
+  // Generate verification token
+  generateVerificationToken(): string {
+    return crypto.randomBytes(32).toString('hex');
+  }
+
+  // Send verification email
+  async sendVerificationEmail(email: string, name: string, token: string): Promise<boolean> {
+    try {
+      const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+      
+      const mailOptions = {
+        from: `"Eviden Platform" <${process.env.EMAIL_USER || 'noreply@eviden.com'}>`,
+        to: email,
+        subject: '🔒 Verify Your Eviden Account',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px;">🎯 Verify Your Eviden Account</h1>
+            </div>
+            
+            <div style="padding: 30px; background: #f8f9fa; border-radius: 0 0 10px 10px;">
+              <h2 style="color: #333;">Hello ${name}! 👋</h2>
+              
+              <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                Thank you for joining Eviden! Click the button below to verify your email and complete your registration.
+              </p>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${verificationLink}" 
+                   style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                          color: white; 
+                          padding: 15px 30px; 
+                          text-decoration: none; 
+                          border-radius: 25px; 
+                          font-weight: bold;
+                          display: inline-block;
+                          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                  ✅ Verify Email Address
+                </a>
+              </div>
+              
+              <p style="color: #888; font-size: 14px;">
+                If the button doesn't work, copy this link: <a href="${verificationLink}">${verificationLink}</a>
+              </p>
+              
+              <p style="color: #888; font-size: 12px; text-align: center; margin-top: 30px;">
+                This link expires in 24 hours. © 2025 Eviden Platform
+              </p>
+            </div>
+          </div>
+        `
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      console.log('✅ Verification email sent to:', email);
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to send verification email:', error);
       return false;
     }
   }

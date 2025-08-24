@@ -3,7 +3,7 @@
 # Attestify API Test Suite
 # Tests all API endpoints to ensure they're working correctly
 
-BASE_URL="http://localhost:3001"
+BASE_URL="http://localhost:5000"
 TEST_ADDRESS="0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
 
 echo "🧪 Starting Attestify API Test Suite"

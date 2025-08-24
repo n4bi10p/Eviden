@@ -1,6 +1,14 @@
 #!/bin/bash
 
 # QR Code and Push Notification API Test Script
+# Make sure the server is running on localhost:5000
+
+echo "🧪 Testing QR Code and Push Notification APIs"
+echo "============================================="
+
+BASE_URL="http://localhost:5000/api"sh
+
+# QR Code and Push Notification API Test Script
 # Make sure the server is running on localhost:3001
 
 echo "🧪 Testing QR Code & Push Notification APIs"

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
-import { useUser } from '../contexts/UserContext';
+import { useWalletAuth } from '../contexts/WalletAuthContext';
 import MacOSButton from '../components/MacOSButton';
 import MacOSSwitch from '../components/MacOSSwitch';
 import GlassCard from '../components/GlassCard';
 
 const Settings: React.FC = () => {
   const { theme } = useTheme();
-  const { user } = useUser();
+  const { user } = useWalletAuth();
   const navigate = useNavigate();
   
   const [settings, setSettings] = useState({

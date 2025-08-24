@@ -5,6 +5,7 @@ import { Form, FormField, TextareaField, SelectField, SubmitButton, createValida
 import { cn } from '../utils';
 import { Plus, Calendar, MapPin, Users, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import EmailVerificationBanner from './EmailVerificationBanner';
 
 interface EventFormData {
   title: string;
@@ -102,12 +103,14 @@ export function EventManagement() {
 
   return (
     <div className={cn(
-      'min-h-screen p-6 transition-all duration-300',
+      'min-h-screen transition-all duration-300',
       theme === 'dark'
         ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900'
         : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'
     )}>
-      <div className="max-w-7xl mx-auto">
+      <EmailVerificationBanner />
+      <div className="p-6">
+        <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -463,6 +466,7 @@ export function EventManagement() {
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

@@ -5,8 +5,14 @@ import { userSchemas } from '../middleware/validation';
 import { authRateLimit } from '../middleware/rateLimit';
 import { asyncHandler } from '../middleware/errorHandler';
 import { AuthenticationError, ValidationError, ConflictError } from '../middleware/errorHandler';
+import { EmailService } from '../services/EmailService';
+import crypto from 'crypto';
 
 const router = Router();
+const emailService = new EmailService();
+
+// Verification tokens storage (use database in production)
+const verificationTokens: Map<string, { userId: string, expires: number }> = new Map();
 
 // Mock user storage (replace with database in production)
 interface User {
@@ -17,6 +23,8 @@ interface User {
   role: string;
   organizationName?: string;
   organizationDescription?: string;
+  isVerified?: boolean; // Account verification status
+  emailVerified?: boolean; // Email confirmation status
   created_at: number;
   last_login?: number;
 }
@@ -25,9 +33,32 @@ const users: Map<string, User> = new Map();
 
 // Helper function to verify signature (simplified for demo)
 const verifySignature = (message: string, signature: string, address: string): boolean => {
-  // In production, implement proper signature verification
-  // For now, we'll just check if signature is present
-  return !!(signature && signature.length > 0);
+  // In production, implement proper signature verification using Aptos SDK
+  // This should cryptographically verify that the signature was created by the wallet owner
+  
+  // Basic checks for demo purposes
+  if (!signature || signature.length < 64) {
+    console.log('❌ Invalid signature format');
+    return false;
+  }
+  
+  if (!address || !address.match(/^0x[a-fA-F0-9]+$/)) {
+    console.log('❌ Invalid address format');
+    return false;
+  }
+  
+  if (!message || message.length < 10) {
+    console.log('❌ Invalid message format');
+    return false;
+  }
+  
+  // TODO: Implement actual cryptographic verification
+  // Example: 
+  // const publicKey = extractPublicKeyFromAddress(address);
+  // return verifySignatureWithPublicKey(message, signature, publicKey);
+  
+  console.log('✅ Signature verification passed (demo mode)');
+  return true;
 };
 
 /**
@@ -49,8 +80,16 @@ router.post('/register',
 
     // Check timestamp (should be within last 5 minutes)
     const now = Math.floor(Date.now() / 1000);
-    if (Math.abs(now - timestamp) > 300) { // 5 minutes
-      throw new AuthenticationError('Signature timestamp expired');
+    const timestampDiff = Math.abs(now - timestamp);
+    if (timestampDiff > 300) { // 5 minutes
+      console.log(`❌ Signature timestamp expired. Diff: ${timestampDiff}s`);
+      throw new AuthenticationError('Signature timestamp expired. Please try again.');
+    }
+
+    // Additional security: Check if timestamp is not from the future
+    if (timestamp > now + 60) { // Allow 1 minute tolerance for clock skew
+      console.log(`❌ Signature timestamp from future. Now: ${now}, Received: ${timestamp}`);
+      throw new AuthenticationError('Invalid signature timestamp');
     }
 
     // Check if user already exists
@@ -65,6 +104,9 @@ router.post('/register',
       }
     }
 
+    // Create verification token
+    const verificationToken = emailService.generateVerificationToken();
+    
     // Create new user
     const newUser: User = {
       id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -74,10 +116,27 @@ router.post('/register',
       role: role || 'attendee',
       organizationName,
       organizationDescription,
+      isVerified: false, // Account verification status
+      emailVerified: false, // Email confirmation status (will be true after verification)
       created_at: Math.floor(Date.now() / 1000),
     };
 
     users.set(address, newUser);
+
+    // Store verification token (expires in 24 hours)
+    verificationTokens.set(verificationToken, {
+      userId: newUser.id,
+      expires: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+    });
+
+    // Send verification email
+    try {
+      await emailService.sendVerificationEmail(email, name, verificationToken);
+      console.log('✅ Verification email sent to:', email);
+    } catch (error) {
+      console.error('❌ Failed to send verification email:', error);
+      // Don't fail registration if email fails
+    }
 
     // Generate JWT token
     const token = generateToken({
@@ -89,7 +148,7 @@ router.post('/register',
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
+      message: 'User registered successfully. Please check your email to verify your account.',
       data: {
         user: {
           id: newUser.id,
@@ -99,6 +158,7 @@ router.post('/register',
           role: newUser.role,
           organizationName: newUser.organizationName,
           organizationDescription: newUser.organizationDescription,
+          emailVerified: newUser.emailVerified,
           created_at: newUser.created_at
         },
         token,
@@ -332,6 +392,121 @@ router.get('/nonce/:address',
         nonce
       }
     });
+  })
+);
+
+/**
+ * @route POST /api/auth/resend-verification
+ * @desc Resend verification email
+ * @access Private
+ */
+router.post('/resend-verification',
+  authenticateToken,
+  authRateLimit.middleware,
+  asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user?.address) {
+      throw new AuthenticationError('User authentication required');
+    }
+    
+    const user = users.get(req.user.address);
+    
+    if (!user) {
+      throw new ValidationError('User not found');
+    }
+
+    if (user.emailVerified) {
+      throw new ValidationError('Email is already verified');
+    }
+
+    // Generate new verification token
+    const verificationToken = emailService.generateVerificationToken();
+    
+    // Store verification token (expires in 24 hours)
+    verificationTokens.set(verificationToken, {
+      userId: user.id,
+      expires: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+    });
+
+    // Send verification email
+    try {
+      await emailService.sendVerificationEmail(user.email, user.name, verificationToken);
+      console.log('✅ Verification email resent to:', user.email);
+    } catch (error) {
+      console.error('❌ Failed to resend verification email:', error);
+      throw new ValidationError('Failed to send verification email. Please try again.');
+    }
+
+    res.json({
+      success: true,
+      message: 'Verification email sent successfully. Please check your inbox.'
+    });
+  })
+);
+
+/**
+ * @route GET /api/auth/verify-email
+ * @desc Verify email with token
+ * @access Public
+ */
+router.get('/verify-email',
+  authRateLimit.middleware,
+  asyncHandler(async (req: Request, res: Response) => {
+    const { token } = req.query;
+
+    console.log('🔍 Email verification request received');
+    console.log('🔍 Token:', token);
+    console.log('🔍 Stored tokens:', Array.from(verificationTokens.keys()));
+
+    if (!token || typeof token !== 'string') {
+      console.log('❌ Invalid token format');
+      
+      // Redirect to frontend with error
+      return res.redirect(`http://localhost:3000/verify-email-result?status=error&message=Invalid verification token format`);
+    }
+
+    // Check if token exists and is valid
+    const tokenData = verificationTokens.get(token);
+    console.log('🔍 Token data found:', tokenData);
+    
+    if (!tokenData) {
+      console.log('❌ Token not found in storage');
+      console.log('🔍 This might be due to server restart. Checking if user exists and marking as verified...');
+      
+      // As a fallback, if token is not found (server restart), redirect to login with instructions
+      return res.redirect(`http://localhost:3000/verify-email-result?status=expired&message=Verification link expired. Please login and request a new verification email.`);
+    }
+
+    // Check if token has expired
+    if (Date.now() > tokenData.expires) {
+      verificationTokens.delete(token);
+      return res.redirect(`http://localhost:3000/verify-email-result?status=expired&message=Verification token has expired. Please request a new verification email.`);
+    }
+
+    // Find user by ID
+    let userToVerify: User | undefined;
+    for (const user of users.values()) {
+      if (user.id === tokenData.userId) {
+        userToVerify = user;
+        break;
+      }
+    }
+
+    if (!userToVerify) {
+      return res.redirect(`http://localhost:3000/verify-email-result?status=error&message=User not found. Please contact support.`);
+    }
+
+    // Update user verification status
+    userToVerify.emailVerified = true;
+    userToVerify.isVerified = true;
+    users.set(userToVerify.address, userToVerify);
+
+    // Remove used token
+    verificationTokens.delete(token);
+
+    console.log('✅ Email verified successfully for user:', userToVerify.email);
+
+    // Redirect to frontend with success
+    res.redirect(`http://localhost:3000/verify-email-result?status=success&message=Email verified successfully! You can now login to access all features.`);
   })
 );
 

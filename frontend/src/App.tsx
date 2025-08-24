@@ -5,8 +5,10 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { WalletAuthProvider } from './contexts/WalletAuthContext';
 import { useWalletAuth } from './contexts/WalletAuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import VerifyEmailResult from './pages/VerifyEmailResult';
 import EventCreate from './pages/EventCreate';
 import EventCheckin from './pages/EventCheckin';
 import Certificates from './pages/Certificates';
@@ -34,6 +36,10 @@ const AppRouter: React.FC = () => {
           <Route 
             path="/signup" 
             element={user ? <Navigate to="/dashboard" replace /> : <Signup />} 
+          />
+          <Route 
+            path="/verify-email-result" 
+            element={<VerifyEmailResult />} 
           />
           
           {/* Protected Routes */}
@@ -102,7 +108,7 @@ const AppRouter: React.FC = () => {
           {/* Default Route */}
           <Route 
             path="/" 
-            element={<Navigate to={user ? "/dashboard" : "/login"} replace />} 
+            element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} 
           />
           
           {/* Catch All Route */}

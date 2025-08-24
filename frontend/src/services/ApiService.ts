@@ -4,7 +4,7 @@ export class ApiService {
   private token: string | null = null;
 
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
     this.token = localStorage.getItem('authToken');
   }
 
@@ -87,6 +87,12 @@ export class ApiService {
 
   async logout(): Promise<void> {
     return this.request('/auth/logout', {
+      method: 'POST',
+    });
+  }
+
+  async resendVerificationEmail(): Promise<{ message: string }> {
+    return this.request('/auth/resend-verification', {
       method: 'POST',
     });
   }

@@ -28,7 +28,7 @@ export default function WalletSelector({ isOpen, onClose, onSelectWallet, isConn
           name: 'Petra Wallet',
           icon: '🏛️',
           // @ts-ignore
-          isInstalled: typeof window !== 'undefined' && window.aptos?.isPetra,
+          isInstalled: typeof window !== 'undefined' && !!(window.aptos && (window.aptos.isPetra || window.aptos.connect)),
           downloadUrl: 'https://petra.app/'
         },
         {
@@ -48,6 +48,21 @@ export default function WalletSelector({ isOpen, onClose, onSelectWallet, isConn
           downloadUrl: 'https://chrome.google.com/webstore/detail/pontem-aptos-wallet/phkbamefinggmakgklpkljjmgibohnba'
         }
       ];
+      
+      // Debug logging
+      console.log('WalletSelector - Available wallets:', walletOptions);
+      console.log('WalletSelector - Window objects:', {
+        aptos: window.aptos,
+        martian: window.martian,
+        pontem: window.pontem
+      });
+      console.log('WalletSelector - Petra check:', {
+        'window.aptos': window.aptos,
+        'window.aptos?.isPetra': window.aptos?.isPetra,
+        'window.aptos?.isConnected': window.aptos?.isConnected,
+        'window.aptos?.connect': window.aptos?.connect,
+        'typeof window.aptos': typeof window.aptos
+      });
       setWallets(walletOptions);
     };
 
@@ -63,7 +78,7 @@ export default function WalletSelector({ isOpen, onClose, onSelectWallet, isConn
   };
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence>
       {isOpen && (
         <>
           {/* Backdrop */}
@@ -100,6 +115,7 @@ export default function WalletSelector({ isOpen, onClose, onSelectWallet, isConn
 
               {/* Wallet Options */}
               <div className="space-y-3">
+                {console.log('WalletSelector - Rendering wallets:', wallets)}
                 {wallets.map((wallet) => (
                   <motion.button
                     key={wallet.type}

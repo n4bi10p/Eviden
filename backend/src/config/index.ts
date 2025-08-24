@@ -67,7 +67,7 @@ interface Config {
 
 const config: Config = {
   NODE_ENV: process.env.NODE_ENV || 'development',
-  PORT: parseInt(process.env.PORT || '3001'),
+  PORT: parseInt(process.env.PORT || '5000'),
   
   // Frontend
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',

@@ -1,12 +1,11 @@
 import React from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { useUser } from '../contexts/UserContext';
+import { useWalletAuth } from '../contexts/WalletAuthContext';
 import ResponsiveLayout from '../components/ResponsiveLayout';
 import UserProfile from '../components/UserProfile';
-import { withRoleProtection } from '../contexts/UserContext';
 
 const Profile: React.FC = () => {
-  const { user } = useUser();
+  const { user } = useWalletAuth();
   const { theme } = useTheme();
 
   if (!user) {
@@ -37,5 +36,4 @@ const Profile: React.FC = () => {
   );
 };
 
-// Protect this route - require authentication
-export default withRoleProtection(Profile, { requireAuth: true });
+export default Profile;

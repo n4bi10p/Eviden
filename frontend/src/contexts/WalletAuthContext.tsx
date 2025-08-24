@@ -15,6 +15,7 @@ interface User {
   avatar?: string;
   created_at?: number;
   isVerified?: boolean;
+  emailVerified?: boolean;
 }
 
 interface WalletAuthContextType {
@@ -321,11 +322,26 @@ export function WalletAuthProvider({ children }: WalletAuthProviderProps) {
         message,
         nonce,
         timestamp,
-      });
+      }) as any;
+
+      // Handle wrapped response format from backend
+      let token, user;
+      if (loginResponse.success && loginResponse.data) {
+        // Backend returns { success: true, data: { user, token } }
+        token = loginResponse.data.token;
+        user = loginResponse.data.user;
+      } else {
+        // Fallback for direct format
+        token = loginResponse.token;
+        user = loginResponse.user;
+      }
 
       // Store token and set user
-      apiService.setToken(loginResponse.token);
-      setUser(loginResponse.user);
+      apiService.setToken(token);
+      setUser(user);
+      
+      // Store token in localStorage for persistence
+      localStorage.setItem('authToken', token);
       
       toast.success('Login successful!');
     } catch (error) {
@@ -370,13 +386,37 @@ export function WalletAuthProvider({ children }: WalletAuthProviderProps) {
         email: userData.email || '',
         organizationName: userData.organizationName || undefined,
         organizationDescription: userData.bio || undefined,
-      });
+      }) as any;
 
       // Store token and set user
-      apiService.setToken(registerResponse.token);
-      setUser(registerResponse.user);
+      console.log('🎉 Registration response:', registerResponse);
       
-      toast.success('Registration successful!');
+      // Handle wrapped response format from backend
+      let token, user;
+      if (registerResponse.success && registerResponse.data) {
+        // Backend returns { success: true, data: { user, token } }
+        token = registerResponse.data.token;
+        user = registerResponse.data.user;
+      } else {
+        // Fallback for direct format
+        token = registerResponse.token;
+        user = registerResponse.user;
+      }
+      
+      console.log('🎉 Extracted token:', token);
+      console.log('🎉 Extracted user:', user);
+      
+      if (!token || !user) {
+        throw new Error('Invalid registration response format');
+      }
+      
+      apiService.setToken(token);
+      setUser(user);
+      
+      // Store token in localStorage for persistence
+      localStorage.setItem('authToken', token);
+      
+      toast.success('Registration successful! Welcome to Eviden!');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Registration failed';
       setError(errorMessage);

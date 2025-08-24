@@ -53,7 +53,7 @@ export function ApiDebugTest() {
 
       // Test 3: Direct API call
       try {
-        const response = await fetch('http://localhost:3001/api/users/stats/global');
+        const response = await fetch('http://localhost:5000/api/users/stats/global');
         const data = await response.json();
         results.push({
           test: 'Direct Fetch Test',
@@ -228,7 +228,7 @@ export function ApiDebugTest() {
             theme === 'dark' ? 'bg-black/20 text-white/90' : 'bg-slate-100 text-slate-800'
           )}>
             <div>Frontend URL: http://localhost:3000</div>
-            <div>Backend API URL: {import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}</div>
+            <div>Backend API URL: {import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}</div>
             <div>Environment: {import.meta.env.DEV ? 'Development' : 'Production'}</div>
           </div>
         </div>
